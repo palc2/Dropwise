@@ -8,6 +8,9 @@
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;1,500&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
 <style>
   *, *::before, *::after { box-sizing:border-box; margin:0; padding:0; }
+  /* Chrome/Safari button reset — prevents blue text and system styling */
+  button{ -webkit-appearance:none; appearance:none; color:inherit; background:none; border:none; font-family:inherit; cursor:pointer; }
+  input, textarea, select{ -webkit-appearance:none; appearance:none; font-family:inherit; }
   :root {
     --bg:#ffffff; --bg2:#f3f2ee; --bg3:#edecea;
     --text:#1a1a1a; --text2:#6b6a66; --text3:#9b9a96;
@@ -38,7 +41,7 @@ header{ margin-bottom:16px; display:flex; align-items:flex-start; justify-conten
 .header-text p{ font-size:12px; color:var(–text2); margin-top:2px; }
 .header-controls{ display:flex; flex-direction:column; gap:6px; align-items:flex-end; flex-shrink:0; }
 .unit-toggle{ display:flex; background:var(–bg2); border:0.5px solid var(–border2); border-radius:99px; padding:2px; gap:1px; }
-.unit-btn{ padding:4px 11px; font-size:12px; font-family:‘DM Sans’,sans-serif; font-weight:500; border:none; background:transparent; color:var(–text2); border-radius:99px; cursor:pointer; transition:all 0.15s; }
+.unit-btn{ -webkit-appearance:none; appearance:none; padding:4px 11px; font-size:12px; font-family:‘DM Sans’,sans-serif; font-weight:500; border:none; background:transparent; color:var(–text2); border-radius:99px; cursor:pointer; transition:all 0.15s; }
 .unit-btn.active{ background:var(–text); color:var(–bg); }
 .sessions-ctrl{ display:flex; align-items:center; gap:7px; background:var(–bg2); border:0.5px solid var(–border2); border-radius:99px; padding:4px 10px; }
 .sessions-ctrl label{ font-size:11px; color:var(–text2); white-space:nowrap; }
@@ -52,11 +55,11 @@ padding:6px 12px; margin-bottom:14px; gap:10px;
 }
 .snotes-strip-text{ font-size:12px; color:var(–text2); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 .snotes-strip-text strong{ font-weight:600; color:var(–text); }
-/* iOS-style toggle */
+/* iOS-style toggle — Chrome safe */
 .toggle-wrap{ display:flex; align-items:center; gap:8px; flex-shrink:0; }
 .toggle-lbl{ font-size:11px; color:var(–text3); }
-.toggle{ position:relative; width:38px; height:22px; flex-shrink:0; }
-.toggle input{ opacity:0; width:0; height:0; position:absolute; }
+.toggle{ position:relative; width:38px; height:22px; flex-shrink:0; display:inline-block; }
+.toggle input{ display:none; }
 .toggle-track{ position:absolute; inset:0; background:var(–border2); border-radius:99px; cursor:pointer; transition:background 0.2s; }
 .toggle input:checked + .toggle-track{ background:var(–green); }
 .toggle-track::after{ content:’’; position:absolute; width:16px; height:16px; background:#fff; border-radius:50%; top:3px; left:3px; transition:transform 0.2s; box-shadow:0 1px 3px rgba(0,0,0,0.2); }
@@ -64,7 +67,7 @@ padding:6px 12px; margin-bottom:14px; gap:10px;
 
 /* ── Tabs ── */
 .tabs{ display:flex; gap:2px; background:var(–bg2); border-radius:var(–radius); padding:3px; margin-bottom:16px; }
-.tab{ flex:1; padding:7px; font-size:13px; font-family:‘DM Sans’,sans-serif; text-align:center; border:none; background:transparent; color:var(–text2); border-radius:8px; cursor:pointer; transition:all 0.15s; }
+.tab{ -webkit-appearance:none; appearance:none; flex:1; padding:7px; font-size:13px; font-family:‘DM Sans’,sans-serif; text-align:center; border:none; background:transparent; color:var(–text2); border-radius:8px; cursor:pointer; transition:all 0.15s; }
 .tab.active{ background:var(–bg); color:var(–text); font-weight:500; box-shadow:0 1px 3px rgba(0,0,0,0.1); }
 .panel{ display:none; } .panel.active{ display:block; }
 
@@ -152,17 +155,20 @@ overflow:hidden;
 
 /* ── Per-session note ── */
 .session-note-wrap{
-padding:6px 12px 8px 12px;
-border-top:0.5px dashed var(–border2);
+padding:0 12px 9px 58px;
+border-top:0.5px dashed var(–border);
+padding-top:6px;
 }
 .session-note-input{
-width:100%; padding:4px 8px; font-size:11px; font-family:‘DM Sans’,sans-serif;
-border:0.5px dashed var(–border2); border-radius:var(–radius-sm);
-background:transparent; color:var(–text2); outline:none;
+-webkit-appearance:none; appearance:none;
+display:block; width:100%; padding:5px 9px; font-size:11px; font-family:‘DM Sans’,sans-serif;
+border:0.5px solid var(–border2); border-radius:var(–radius-sm);
+background:var(–bg2); color:var(–text2); outline:none;
 transition:border-color 0.2s, background 0.2s, color 0.2s;
+box-shadow:none;
 }
 .session-note-input::placeholder{ color:var(–text3); }
-.session-note-input:focus{ border-color:var(–blue); border-style:solid; background:var(–bg2); color:var(–text); }
+.session-note-input:focus{ border-color:var(–blue); background:var(–bg); color:var(–text); box-shadow:none; }
 
 /* ── Write schedule btn ── */
 .write-schedule-btn{ display:flex; align-items:center; justify-content:center; gap:6px; margin:12px auto 0; padding:7px 16px; font-size:12px; font-family:‘DM Sans’,sans-serif; color:var(–text3); background:transparent; border:0.5px solid var(–border); border-radius:99px; cursor:pointer; transition:color 0.15s,border-color 0.15s; }
