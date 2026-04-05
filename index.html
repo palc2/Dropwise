@@ -71,8 +71,9 @@ padding:6px 12px; margin-bottom:14px; gap:10px;
 .toggle-lbl{ font-size:11px; color:var(–text3); }
 .toggle{ position:relative; width:38px; height:22px; flex-shrink:0; display:inline-block; }
 .toggle input{ display:none; }
-.toggle-track{ position:absolute; inset:0; background:var(–border2); border-radius:99px; cursor:pointer; transition:background 0.2s; }
-.toggle input:checked + .toggle-track{ background:var(–green); }
+.toggle-track{ position:absolute; inset:0; background:rgba(0,0,0,0.18); border-radius:99px; cursor:pointer; transition:background 0.2s; }
+.toggle input:checked + .toggle-track{ background:#1D9E75; }
+@media(prefers-color-scheme:dark){ .toggle-track{ background:rgba(255,255,255,0.2); } }
 .toggle-track::after{ content:’’; position:absolute; width:16px; height:16px; background:#fff; border-radius:50%; top:3px; left:3px; transition:transform 0.2s; box-shadow:0 1px 3px rgba(0,0,0,0.2); }
 .toggle input:checked + .toggle-track::after{ transform:translateX(16px); }
 
@@ -243,7 +244,16 @@ box-shadow:none;
 .note-input:focus{ border-color:#378ADD; }
 .note-input.tmrw-input:focus{ border-color:#E8960A; }
 .note-hint{ font-size:11px; color:var(–text3); margin-top:6px; line-height:1.5; }
-.tmrw-badge{ font-size:10px; font-weight:600; color:var(–amber); letter-spacing:0.3px; padding:1px 0; }
+.tmrw-badge{ font-size:10px; font-weight:600; color:#E8960A; letter-spacing:0.3px; padding:1px 0; }
+.tmrw-save-btn{
+display:block; width:100%; margin-top:8px;
+padding:9px; font-size:13px; font-family:‘DM Sans’,sans-serif; font-weight:500;
+background:#E8960A; color:#ffffff; border:none; border-radius:var(–radius-sm);
+cursor:pointer; transition:opacity 0.15s;
+}
+.tmrw-save-btn:hover{ opacity:0.88; }
+.tmrw-saved-msg{ font-size:11px; color:#1D9E75; font-weight:600; text-align:center; margin-top:6px; height:16px; opacity:0; transition:opacity 0.3s; }
+.tmrw-saved-msg.visible{ opacity:1; }
 
 /* ── Mood tags ── */
 .mood-section{ padding:0 12px 10px; }
@@ -384,7 +394,9 @@ box-shadow:none;
 
   <div class="note-body" id="note-body-tmrw">
     <div class="tmrw-badge">🌙 Plan for tomorrow</div>
-    <textarea class="note-input tmrw-input" id="note-tmrw" rows="2" placeholder="Leave yourself a note for tomorrow — try an earlier session, cluster feed after 5 pm…" oninput="saveNote('tmrw')" style="margin-top:6px"></textarea>
+    <textarea class="note-input tmrw-input" id="note-tmrw" rows="2" placeholder="Leave yourself a note for tomorrow — try an earlier session, cluster feed after 5 pm…" style="margin-top:6px"></textarea>
+    <button class="tmrw-save-btn" id="tmrw-save-btn" onclick="saveTmrwNote()">Save plan</button>
+    <div class="tmrw-saved-msg" id="tmrw-saved-msg">Saved ✓</div>
     <div class="note-hint">This will appear at the top of tomorrow's log as a reminder from you.</div>
   </div>
 </div>
@@ -825,9 +837,16 @@ function toggleDone(i){
 
 function saveNote(tab){
   const key=dateKey(currentDate),day=getDayData(key);
-  const val=document.getElementById('note-'+tab).value;
-  if(tab==='today')day.note=val; else day.noteTmrw=val;
+  if(tab==='today'){ day.note=document.getElementById('note-today').value; persist(); }
+}
+
+function saveTmrwNote(){
+  const key=dateKey(currentDate),day=getDayData(key);
+  day.noteTmrw=document.getElementById('note-tmrw').value;
   persist();
+  const msg=document.getElementById('tmrw-saved-msg');
+  msg.classList.add('visible');
+  setTimeout(()=>msg.classList.remove('visible'), 2000);
 }
 
 // ── Schedule editor ───────────────────────────────────────────────────────────
