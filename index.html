@@ -281,8 +281,14 @@ function roundToHalf(m) { return Math.round(m / 30) * 30; }
 
 function buildEvenSchedule(n) {
   const interval = (24 * 60) / n;
-  return Array.from({length: n}, (_, i) => ({
-    time: minsToLabel(roundToHalf(6 * 60 + i * interval) % 1440),
+  // Generate slots evenly from midnight, rounded to nearest :00 or :30
+  const slots = Array.from({length: n}, (_, i) =>
+    roundToHalf(i * interval) % 1440
+  );
+  // Sort chronologically (they should already be, but make it explicit)
+  slots.sort((a, b) => a - b);
+  return slots.map((m, i) => ({
+    time: minsToLabel(m),
     name: `Session ${i + 1}`
   }));
 }
@@ -306,7 +312,7 @@ function parseTime(str) {
 // ── State ───────────────────────────────────────────────────────────────────
 let currentDate = new Date(); currentDate.setHours(0,0,0,0);
 let data = {}, chartView = 'daily', chartInst = null;
-let unit = 'oz', sessionCount = 9, customSchedule = null;
+let unit = 'oz', sessionCount = 8, customSchedule = null;
 const saveTimers = {};
 
 function getSchedule() {
@@ -329,7 +335,7 @@ async function loadData() {
       const p = JSON.parse(s);
       data = p.data || {};
       unit = p.unit || 'oz';
-      sessionCount = p.sessionCount || 9;
+      sessionCount = p.sessionCount || 8;
       customSchedule = p.customSchedule || null;
     }
   } catch(e) {}
