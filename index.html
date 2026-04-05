@@ -545,14 +545,18 @@ transition: border-color 0.2s, background 0.2s, box-shadow 0.2s, opacity 0.2s;
 <script>
 // ── Storage ───────────────────────────────────────────────────────────────────
 const store = {
-  _mem: {},
   async get(k) {
+    // Try window.storage first (Claude artifact viewer)
     try { if (window.storage) { const r = await window.storage.get(k); return r ? r.value : null; } } catch(e) {}
-    return this._mem[k] ?? null;
+    // Fall back to localStorage (GitHub Pages and all real browsers)
+    try { return localStorage.getItem(k); } catch(e) {}
+    return null;
   },
   async set(k, v) {
+    // Try window.storage first
     try { if (window.storage) { await window.storage.set(k, v); return; } } catch(e) {}
-    this._mem[k] = v;
+    // Fall back to localStorage
+    try { localStorage.setItem(k, v); } catch(e) {}
   }
 };
 
