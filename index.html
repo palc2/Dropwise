@@ -219,6 +219,20 @@ transition: border-color 0.2s, background 0.2s, box-shadow 0.2s, opacity 0.2s;
 /* Volume / duration inputs */
 .s-inputs   { display: flex; flex-direction: row; align-items: center; gap: 4px; flex-shrink: 0; width: 138px; justify-content: flex-end; }
 .field      { display: flex; flex-direction: row; align-items: center; gap: 3px; }
+
+/* Delete card button */
+.card-delete-btn { flex-shrink: 0; width: 22px; height: 22px; display: flex; align-items: center; justify-content: center; color: #c8c7c3; border-radius: 50%; transition: color 0.15s, background 0.15s; margin-left: 2px; }
+.card-delete-btn:hover { color: #EF4444; background: rgba(239,68,68,0.08); }
+
+/* Extra cards (additions beyond sessionCount) */
+.session-card.extra-card { border-left-color: rgba(0,0,0,0.12); opacity: 0.85; }
+.session-card.extra-card .s-name { color: #9b9a96; }
+
+@media (prefers-color-scheme: dark) {
+.card-delete-btn { color: #5a5a5e; }
+.session-card.extra-card { border-left-color: rgba(255,255,255,0.1); }
+.session-card.extra-card .s-name { color: #5a5a5e; }
+}
 .mini-input { width: 46px; padding: 5px 4px; font-size: 12px; border: 0.5px solid rgba(0,0,0,0.18); border-radius: var(–rs); background: #ffffff; color: #1a1a1a; text-align: center; -moz-appearance: textfield; transition: border-color 0.2s; }
 .mini-input::-webkit-outer-spin-button, .mini-input::-webkit-inner-spin-button { -webkit-appearance: none; }
 .mini-input:focus { outline: none; border-color: #378ADD; }
@@ -701,13 +715,26 @@ function syncPrefsUI() {
   document.getElementById('snotes-toggle').checked = showSessionNotes;
 }
 
-function setUnit(u)          { unit = u; persist(); syncPrefsUI(); renderLog(); updateHistoryHeader(); }
-function setSessionCount(v)  {
-  sessionCount = parseInt(v);
-  if (customSchedule && customSchedule.length !== sessionCount) customSchedule = null;
+function setUnit(u)         { unit = u; persist(); syncPrefsUI(); renderLog(); updateHistoryHeader(); }
+function setSessionCount(v) {
+  const newCount = parseInt(v);
+  if (customSchedule) {
+    if (customSchedule.length < newCount) {
+      // Extend with generated times — keep all existing edited times intact
+      const even = buildEvenSchedule(newCount);
+      while (customSchedule.length < newCount) {
+        customSchedule.push(even[customSchedule.length]);
+      }
+    } else if (customSchedule.length > newCount) {
+      // Trim from the end — only remove slots beyond the new count
+      customSchedule = customSchedule.slice(0, newCount);
+    }
+    // If lengths already match, touch nothing
+  }
+  sessionCount = newCount;
   persist(); syncPrefsUI(); renderLog();
 }
-function setSessionNotes(v)  { showSessionNotes = v; persist(); renderLog(); }
+function setSessionNotes(v) { showSessionNotes = v; persist(); renderLog(); }
 function updateHistoryHeader() { document.getElementById('history-unit-header').textContent = `Total (${unitLabel()})`; }
 
 // ── Day data ──────────────────────────────────────────────────────────────────
@@ -718,13 +745,47 @@ function getDayData(key) {
   };
   while (data[key].sessions.length < 12) data[key].sessions.push({ oz:'', min:'', done:false, customName:'', sessionNote:'' });
   data[key].sessions.forEach(s => {
-    if (s.done      === undefined) s.done      = false;
+    if (s.done       === undefined) s.done       = false;
     if (s.customName  === undefined) s.customName  = '';
     if (s.sessionNote === undefined) s.sessionNote = '';
+    if (s.deleted     === undefined) s.deleted     = false;
   });
   if (!data[key].moods)    data[key].moods    = [];
   if (!data[key].noteTmrw) data[key].noteTmrw = '';
   return data[key];
+}
+
+// How many cards to show for a given day:
+// - If ANY session has data (volume, duration, done, name, note, or a custom
+//   time set for that slot), freeze the card count — never reduce it.
+// - Empty days follow sessionCount.
+function getCardCountForDay(day) {
+  let highestTouched = -1;
+  day.sessions.forEach((s, i) => {
+    if (!s.deleted && (
+      s.oz !== '' || s.min !== '' || s.done ||
+      s.customName || s.sessionNote ||
+      (customSchedule && customSchedule[i]) // slot has a custom time
+    )) highestTouched = i;
+  });
+  if (highestTouched >= 0) {
+    return Math.max(highestTouched + 1, sessionCount);
+  }
+  return sessionCount;
+}
+
+// Returns a label for a slot index — uses schedule time if available
+function slotLabel(schedule, i) {
+  if (schedule[i]) return schedule[i];
+  const baseSchedule = buildEvenSchedule(Math.max(sessionCount, i + 1));
+  return baseSchedule[i] || { time: '—', name: `Session ${i+1}` };
+}
+
+function deleteCard(i) {
+  const key = dateKey(currentDate), day = getDayData(key);
+  // Mark as deleted and clear all data for this slot
+  day.sessions[i] = { oz:'', min:'', done:false, customName:'', sessionNote:'', deleted:true };
+  persist(); renderLog();
 }
 
 function changeDay(d) {
@@ -806,26 +867,41 @@ let cardDragSrc = null;
 function renderLog() {
   const key = dateKey(currentDate), day = getDayData(key);
   document.getElementById('date-label').textContent = fmtDate(currentDate);
-  document.getElementById('note-today').value  = day.note    || '';
-  document.getElementById('note-tmrw').value   = day.noteTmrw || '';
+  document.getElementById('note-today').value = day.note    || '';
+  document.getElementById('note-tmrw').value  = day.noteTmrw || '';
   renderPlanBanner();
   renderMoodTags();
-  const schedule = getSchedule(), list = document.getElementById('session-list');
-  list.innerHTML = '';
-  schedule.forEach((ses, i) => buildSessionCard(list, i, ses, day));
+
+  const schedule    = getSchedule();
+  const cardCount   = getCardCountForDay(day);
+  const list        = document.getElementById('session-list');
+  list.innerHTML    = '';
+
+  // Build visible slot indices (skip deleted)
+  let visibleIdx = 0;
+  for (let i = 0; i < cardCount; i++) {
+    if (day.sessions[i] && day.sessions[i].deleted) continue;
+    const ses      = schedule[i] || slotLabel(schedule, i);
+    const isExtra  = i >= sessionCount; // beyond the global schedule count
+    buildSessionCard(list, i, ses, day, isExtra, visibleIdx++);
+  }
   updateSummary(day);
 }
 
-function buildSessionCard(list, i, ses, day) {
-  const s        = day.sessions[i];
-  const isDone   = !!s.done;
-  const hasValue = s.oz !== '' && parseFloat(s.oz) > 0;
-  const isCustomTime = !!(customSchedule && customSchedule.length === sessionCount);
-  const nameVal  = s.customName || contextLabel(ses.time);
+function buildSessionCard(list, i, ses, day, isExtra, visibleIdx) {
+  const s          = day.sessions[i];
+  const isDone     = !!s.done;
+  const hasValue   = s.oz !== '' && parseFloat(s.oz) > 0;
+  const isCustomTime  = !!(customSchedule && customSchedule.length === sessionCount);
+  const autoLabel  = isExtra ? 'Additional session' : contextLabel(ses.time);
+  const nameVal    = s.customName || autoLabel;
   const isCustomName = !!s.customName;
 
   const card = document.createElement('div');
-  card.className = 'session-card' + (isDone ? ' done' : '') + (hasValue && !isDone ? ' has-value' : '');
+  card.className = 'session-card'
+    + (isDone ? ' done' : '')
+    + (hasValue && !isDone ? ' has-value' : '')
+    + (isExtra ? ' extra-card' : '');
   card.id = 'card-' + i;
 
   const main = document.createElement('div');
@@ -841,7 +917,7 @@ function buildSessionCard(list, i, ses, day) {
         <circle cx="9.5" cy="10.5" r="1.2" fill="#888"/>
       </svg>
     </div>
-    <div class="s-num">${i+1}</div>
+    <div class="s-num">${visibleIdx + 1}</div>
     <button class="dot-btn${isDone ? ' done' : ''}" id="dot-${i}" onclick="toggleDone(${i})"></button>
     <div class="s-info">
       <div class="s-time" id="stime-${i}" title="Tap to edit time" onclick="editSessionTime(${i})">${ses.time}${isCustomTime ? ' <span class="time-edited-icon">✎</span>' : ''}</div>
@@ -851,6 +927,11 @@ function buildSessionCard(list, i, ses, day) {
       <div class="field"><input class="mini-input" type="number" min="0" step="${unit==='ml'?1:0.1}" placeholder="0" value="${displayVal(s.oz)}" oninput="updateSession(${i},'oz',this.value,this)"/><span class="field-lbl">${unitLabel()}</span></div>
       <div class="field"><input class="mini-input" type="number" min="0" placeholder="0" value="${s.min}" oninput="updateSession(${i},'min',this.value,this)"/><span class="field-lbl">min</span></div>
     </div>
+    <button class="card-delete-btn" title="Remove this session" onclick="deleteCard(${i})">
+      <svg width="13" height="13" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
+        <line x1="2" y1="2" x2="12" y2="12"/><line x1="12" y1="2" x2="2" y2="12"/>
+      </svg>
+    </button>
     <span class="saved-badge" id="badge-${i}" data-idx="${i}"></span>`;
   card.appendChild(main);
 
@@ -911,17 +992,20 @@ function reorderCards(from, to) {
 }
 
 function updateSummary(day) {
+  const cardCount = getCardCountForDay(day);
   let totalOz = 0, logged = 0, lastOz = null, lastIdx = -1;
-  for (let i = 0; i < sessionCount; i++) {
+  for (let i = 0; i < cardCount; i++) {
     const s = day.sessions[i];
+    if (!s || s.deleted) continue;
     if (s.oz !== '') { const v = parseFloat(s.oz)||0; totalOz += v; logged++; lastOz = v; lastIdx = i; }
   }
-  const done   = day.sessions.slice(0, sessionCount).filter(s => s.done).length;
-  const isml   = unit === 'ml';
-  const conv   = v => isml ? ozToMl(v) : v;
-  const fmt    = v => isml ? v.toFixed(0) : v.toFixed(1);
-  document.getElementById('sum-total').textContent    = fmt(conv(totalOz))      + ' ' + unitLabel();
-  document.getElementById('sum-sessions').textContent = done + '/' + sessionCount;
+  const done = day.sessions.slice(0, cardCount).filter(s => s && !s.deleted && s.done).length;
+  const total = day.sessions.slice(0, cardCount).filter(s => s && !s.deleted).length;
+  const isml  = unit === 'ml';
+  const conv  = v => isml ? ozToMl(v) : v;
+  const fmt   = v => isml ? v.toFixed(0) : v.toFixed(1);
+  document.getElementById('sum-total').textContent    = fmt(conv(totalOz)) + ' ' + unitLabel();
+  document.getElementById('sum-sessions').textContent = done + '/' + total;
   document.getElementById('sum-avg').textContent      = logged > 0 ? fmt(conv(totalOz/logged)) + ' ' + unitLabel() : '—';
   document.getElementById('sum-last').textContent     = lastOz !== null ? fmt(conv(lastOz)) + ' ' + unitLabel() : '—';
   document.querySelectorAll('.session-card').forEach(c => c.classList.remove('is-last'));
@@ -1193,8 +1277,9 @@ function renderHistory() {
   tbody.innerHTML = ''; let hasAny = false;
   days.forEach(d => {
     const key = dateKey(d), day = data[key]; if (!day) return;
-    const totalOz = day.sessions.slice(0,sessionCount).reduce((s,x) => s+(parseFloat(x.oz)||0), 0);
-    const done    = day.sessions.slice(0,sessionCount).filter(x => x.done).length;
+    const activeSessions = day.sessions.filter(s => s && !s.deleted);
+    const totalOz = activeSessions.reduce((s,x) => s+(parseFloat(x.oz)||0), 0);
+    const done    = activeSessions.filter(x => x.done).length;
     if (done === 0 && totalOz === 0) return;
     hasAny = true;
     const disp       = unit === 'ml' ? ozToMl(totalOz).toFixed(0) : totalOz.toFixed(1);
