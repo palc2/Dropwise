@@ -5,87 +5,170 @@
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <title>Dropwise</title>
-<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;1,500&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
 <style>
-  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  *, *::before, *::after { box-sizing:border-box; margin:0; padding:0; }
   :root {
-    --bg:#ffffff; --bg2:#f5f4f0; --bg3:#eeecea;
+    --bg:#ffffff; --bg2:#f3f2ee; --bg3:#edecea;
     --text:#1a1a1a; --text2:#6b6a66; --text3:#9b9a96;
-    --border:rgba(0,0,0,0.12); --border2:rgba(0,0,0,0.22);
-    --blue:#378ADD; --green:#1D9E75;
-    --radius:10px; --radius-sm:7px; --accent:#3B82C4;
+    --border:rgba(0,0,0,0.10); --border2:rgba(0,0,0,0.18);
+    --blue:#378ADD; --green:#1D9E75; --amber:#E8960A;
+    --radius:10px; --radius-sm:7px; --accent:#E8960A;
+    --card-bg:#ffffff; --card-border:rgba(0,0,0,0.08);
+    --card-filled-border:rgba(232,150,10,0.4); --card-filled-bg:rgba(232,150,10,0.04);
+    --card-done-bg:#ffffff;
   }
   @media(prefers-color-scheme:dark){
-    :root{ --bg:#1c1c1c; --bg2:#252525; --bg3:#2e2e2e; --text:#f0eeea; --text2:#a0a09a; --text3:#6a6a64; --border:rgba(255,255,255,0.1); --border2:rgba(255,255,255,0.2); }
+    :root{
+      --bg:#1c1c1e; --bg2:#2c2c2e; --bg3:#141414;
+      --text:#f5f5f5; --text2:#98989e; --text3:#5a5a5e;
+      --border:rgba(255,255,255,0.08); --border2:rgba(255,255,255,0.14);
+      --card-bg:#1c1c1e; --card-border:rgba(255,255,255,0.10);
+      --card-filled-border:rgba(232,150,10,0.5); --card-filled-bg:rgba(232,150,10,0.07);
+      --card-done-bg:#18181a;
+    }
   }
   body{ font-family:'DM Sans',-apple-system,sans-serif; background:var(--bg3); color:var(--text); min-height:100vh; }
   .app{ max-width:480px; margin:0 auto; padding:16px 12px 40px; }
 
-header{ margin-bottom:20px; display:flex; align-items:flex-start; justify-content:space-between; gap:12px; }
-.header-text h1{ font-family:‘DM Serif Display’,Georgia,serif; font-size:26px; font-weight:400; letter-spacing:-0.3px; }
-.header-text h1 span{ color:var(–accent); font-style:italic; }
+/* ── Header ── */
+header{ margin-bottom:16px; display:flex; align-items:flex-start; justify-content:space-between; gap:12px; }
+.header-text h1{ font-family:‘Playfair Display’,Georgia,serif; font-size:26px; font-weight:500; letter-spacing:-0.2px; }
+.header-text h1 span{ color:var(–amber); font-style:italic; }
 .header-text p{ font-size:12px; color:var(–text2); margin-top:2px; }
 .header-controls{ display:flex; flex-direction:column; gap:6px; align-items:flex-end; flex-shrink:0; }
-
 .unit-toggle{ display:flex; background:var(–bg2); border:0.5px solid var(–border2); border-radius:99px; padding:2px; gap:1px; }
 .unit-btn{ padding:4px 11px; font-size:12px; font-family:‘DM Sans’,sans-serif; font-weight:500; border:none; background:transparent; color:var(–text2); border-radius:99px; cursor:pointer; transition:all 0.15s; }
 .unit-btn.active{ background:var(–text); color:var(–bg); }
-
 .sessions-ctrl{ display:flex; align-items:center; gap:7px; background:var(–bg2); border:0.5px solid var(–border2); border-radius:99px; padding:4px 10px; }
 .sessions-ctrl label{ font-size:11px; color:var(–text2); white-space:nowrap; }
 .sessions-ctrl select{ font-size:12px; font-family:‘DM Sans’,sans-serif; font-weight:500; border:none; background:transparent; color:var(–text); cursor:pointer; outline:none; }
 
+/* ── Session notes toggle strip ── */
+.snotes-strip{
+display:flex; align-items:center; justify-content:space-between;
+background:var(–bg2); border:0.5px solid var(–border); border-radius:var(–radius-sm);
+padding:6px 12px; margin-bottom:14px; gap:10px;
+}
+.snotes-strip-text{ font-size:12px; color:var(–text2); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.snotes-strip-text strong{ font-weight:600; color:var(–text); }
+/* iOS-style toggle */
+.toggle-wrap{ display:flex; align-items:center; gap:8px; flex-shrink:0; }
+.toggle-lbl{ font-size:11px; color:var(–text3); }
+.toggle{ position:relative; width:38px; height:22px; flex-shrink:0; }
+.toggle input{ opacity:0; width:0; height:0; position:absolute; }
+.toggle-track{ position:absolute; inset:0; background:var(–border2); border-radius:99px; cursor:pointer; transition:background 0.2s; }
+.toggle input:checked + .toggle-track{ background:var(–green); }
+.toggle-track::after{ content:’’; position:absolute; width:16px; height:16px; background:#fff; border-radius:50%; top:3px; left:3px; transition:transform 0.2s; box-shadow:0 1px 3px rgba(0,0,0,0.2); }
+.toggle input:checked + .toggle-track::after{ transform:translateX(16px); }
+
+/* ── Tabs ── */
 .tabs{ display:flex; gap:2px; background:var(–bg2); border-radius:var(–radius); padding:3px; margin-bottom:16px; }
 .tab{ flex:1; padding:7px; font-size:13px; font-family:‘DM Sans’,sans-serif; text-align:center; border:none; background:transparent; color:var(–text2); border-radius:8px; cursor:pointer; transition:all 0.15s; }
 .tab.active{ background:var(–bg); color:var(–text); font-weight:500; box-shadow:0 1px 3px rgba(0,0,0,0.1); }
 .panel{ display:none; } .panel.active{ display:block; }
 
+/* ── Date row ── */
 .date-row{ display:flex; align-items:center; gap:8px; margin-bottom:14px; }
 .date-nav{ width:34px; height:34px; border:0.5px solid var(–border2); border-radius:var(–radius-sm); background:var(–bg); color:var(–text); font-size:18px; cursor:pointer; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
 .date-label{ flex:1; text-align:center; font-size:15px; font-weight:500; }
 
+/* ── Plan-ahead banner ── */
+.plan-banner{
+display:flex; align-items:flex-start; gap:9px;
+background:rgba(245,158,11,0.07); border:0.5px solid rgba(245,158,11,0.3);
+border-radius:var(–radius-sm); padding:9px 12px; margin-bottom:12px;
+font-size:12px; color:var(–text2); line-height:1.55;
+animation:fadeIn 0.3s ease;
+}
+.plan-banner-icon{ font-size:15px; flex-shrink:0; margin-top:1px; }
+.plan-banner-body{ flex:1; }
+.plan-banner-label{ font-size:10px; font-weight:600; color:var(–amber); letter-spacing:0.4px; text-transform:uppercase; margin-bottom:3px; }
+.plan-banner-dismiss{ font-size:11px; color:var(–text3); cursor:pointer; margin-top:4px; display:inline-block; }
+.plan-banner-dismiss:hover{ color:var(–text2); }
+@keyframes fadeIn{ from{opacity:0;transform:translateY(-4px)} to{opacity:1;transform:translateY(0)} }
+
+/* ── Summary ── */
 .summary-row{ display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:8px; margin-bottom:14px; }
-.metric{ background:var(–bg); border-radius:var(–radius-sm); padding:10px 8px; text-align:center; border:0.5px solid var(–border); }
+.metric{ background:var(–card-bg); border-radius:var(–radius-sm); padding:10px 8px; text-align:center; border:0.5px solid var(–card-border); }
 .metric-val{ font-size:18px; font-weight:600; }
 .metric-lbl{ font-size:10px; color:var(–text2); margin-top:2px; }
-.metric.highlight{ border-color:rgba(55,138,221,0.35); background:rgba(55,138,221,0.07); }
-.metric.highlight .metric-val{ color:#185FA5; }
-@media(prefers-color-scheme:dark){ .metric.highlight .metric-val{ color:#85B7EB; } }
+.metric.highlight{ border-color:rgba(232,150,10,0.4); background:rgba(232,150,10,0.07); }
+.metric.highlight .metric-val{ color:#a06400; }
+@media(prefers-color-scheme:dark){ .metric.highlight .metric-val{ color:#fbbf24; } }
 
-.session-list{ display:flex; flex-direction:column; gap:6px; }
-.session-card{ background:var(–bg); border:0.5px solid var(–border); border-radius:var(–radius); padding:10px 12px; display:flex; align-items:center; gap:8px; transition:opacity 0.2s, box-shadow 0.15s; }
-.session-card.done{ opacity:0.55; }
-.session-card.is-last{ border-color:rgba(55,138,221,0.4); }
-.session-card.card-dragging{ opacity:0.35; }
-.session-card.card-drag-over{ box-shadow:0 -2.5px 0 0 var(–blue); background:rgba(55,138,221,0.04); }
-.card-grip{ flex-shrink:0; width:18px; height:32px; display:flex; align-items:center; justify-content:center; cursor:grab; touch-action:none; opacity:0.4; }
-.card-grip:active{ cursor:grabbing; opacity:0.7; }
-.dot-btn{ width:22px; height:22px; border-radius:50%; flex-shrink:0; border:none; cursor:pointer; background:var(–blue); transition:background 0.2s,transform 0.1s; position:relative; display:flex; align-items:center; justify-content:center; }
-.dot-btn:active{ transform:scale(0.88); }
-.dot-btn.done{ background:#c8c7c3; }
+/* ── Session cards ── */
+.session-list{ display:flex; flex-direction:column; gap:7px; }
+.session-card{
+background:var(–card-bg); border:1px solid var(–card-border);
+border-left:3px solid transparent; border-radius:var(–radius);
+transition:border-color 0.2s, background 0.2s, box-shadow 0.2s, opacity 0.2s;
+overflow:hidden;
+}
+.card-main{ padding:10px 12px 10px 10px; display:flex; align-items:center; gap:8px; position:relative; }
+.session-card.has-value{ border-left-color:var(–amber); border-color:var(–card-filled-border); background:var(–card-filled-bg); }
+.session-card.done{ opacity:0.5; background:var(–card-done-bg); border-left-color:var(–green) !important; }
+.session-card.is-last{ box-shadow:0 0 0 1.5px var(–amber); border-color:transparent; }
+.session-card.card-dragging{ opacity:0.3; }
+.session-card.card-drag-over{ box-shadow:0 -3px 0 0 var(–amber); }
+
+.card-grip{ flex-shrink:0; width:16px; height:32px; display:flex; align-items:center; justify-content:center; cursor:grab; touch-action:none; opacity:0.22; transition:opacity 0.15s; }
+.session-card:hover .card-grip{ opacity:0.45; }
+.card-grip:active{ cursor:grabbing; opacity:0.8; }
+
+.s-num{ flex-shrink:0; width:20px; height:20px; border-radius:50%; background:var(–bg2); border:0.5px solid var(–border2); font-size:10px; font-weight:600; color:var(–text3); display:flex; align-items:center; justify-content:center; transition:background 0.2s, color 0.2s; }
+.session-card.has-value .s-num{ background:rgba(232,150,10,0.15); color:var(–amber); border-color:rgba(232,150,10,0.35); }
+.session-card.done .s-num{ background:rgba(29,158,117,0.15); color:var(–green); border-color:rgba(29,158,117,0.3); }
+
+@keyframes dotPulse{ 0%{box-shadow:0 0 0 0 rgba(232,150,10,0.6)} 70%{box-shadow:0 0 0 9px rgba(232,150,10,0)} 100%{box-shadow:0 0 0 0 rgba(232,150,10,0)} }
+@keyframes dotPulseDark{ 0%{box-shadow:0 0 0 0 rgba(29,158,117,0.6)} 70%{box-shadow:0 0 0 9px rgba(29,158,117,0)} 100%{box-shadow:0 0 0 0 rgba(29,158,117,0)} }
+.dot-btn{ width:24px; height:24px; border-radius:50%; flex-shrink:0; cursor:pointer; background:var(–bg2); border:1.5px solid var(–border2); transition:background 0.2s, transform 0.1s, border-color 0.2s; position:relative; display:flex; align-items:center; justify-content:center; }
+.dot-btn:active{ transform:scale(0.85); }
+.dot-btn.pulse{ animation:dotPulse 0.5s ease-out; }
+@media(prefers-color-scheme:dark){ .dot-btn.pulse{ animation:dotPulseDark 0.5s ease-out; } }
+.dot-btn.done{ background:var(–green); border-color:var(–green); }
 .dot-btn.done::after{ content:’’; display:block; width:6px; height:10px; border-right:2px solid #fff; border-bottom:2px solid #fff; transform:rotate(40deg) translate(-1px,-1px); }
-.s-info{ flex:1; min-width:0; }
-.s-time{ font-size:13px; font-weight:500; cursor:pointer; border-radius:3px; padding:1px 2px; margin:-1px -2px; transition:background 0.15s; display:inline-block; }
+
+.s-info{ flex:1; min-width:0; overflow:hidden; }
+.s-time{ font-size:13px; font-weight:600; cursor:pointer; border-radius:3px; padding:1px 2px; margin:-1px -2px; transition:background 0.15s; display:inline-block; }
 .s-time:hover{ background:var(–bg2); }
-.s-time-input{ font-size:13px; font-weight:500; font-family:‘DM Sans’,sans-serif; border:none; border-bottom:1.5px solid var(–blue); background:transparent; outline:none; width:90px; padding:1px 0; color:var(–text); }
-.s-name{ font-size:11px; color:var(–text2); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; cursor:pointer; border-radius:3px; padding:1px 2px; margin:-1px -2px; transition:background 0.15s; }
+.s-time-input{ font-size:13px; font-weight:600; font-family:‘DM Sans’,sans-serif; border:none; border-bottom:1.5px solid var(–blue); background:transparent; outline:none; width:90px; padding:1px 0; color:var(–text); }
+.s-name{ font-size:11px; color:var(–text2); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; cursor:pointer; border-radius:3px; padding:1px 2px; margin:-1px -2px; transition:background 0.15s; font-style:italic; display:block; }
+.s-name.custom-name{ font-style:normal; }
 .s-name:hover{ background:var(–bg2); }
 .s-name-input{ font-size:11px; color:var(–text); font-family:‘DM Sans’,sans-serif; border:none; border-bottom:1.5px solid var(–blue); background:transparent; outline:none; width:100%; padding:1px 0; }
-.s-inputs{ display:flex; gap:6px; flex-shrink:0; align-items:center; }
-.field{ display:flex; flex-direction:column; align-items:center; gap:2px; }
-.mini-input{ width:62px; padding:5px 6px; font-size:13px; font-family:‘DM Sans’,sans-serif; border:0.5px solid var(–border2); border-radius:var(–radius-sm); background:var(–bg2); color:var(–text); text-align:center; -moz-appearance:textfield; transition:border-color 0.2s; }
+/* Fixed-width right-aligned inputs — side by side, no stacking */
+.s-inputs{ display:flex; flex-direction:row; align-items:center; gap:4px; flex-shrink:0; width:138px; justify-content:flex-end; }
+.field{ display:flex; flex-direction:row; align-items:center; gap:3px; }
+.mini-input{ width:46px; padding:5px 4px; font-size:12px; font-family:‘DM Sans’,sans-serif; border:0.5px solid var(–border2); border-radius:var(–radius-sm); background:var(–bg2); color:var(–text); text-align:center; -moz-appearance:textfield; transition:border-color 0.2s, background 0.2s; }
 .mini-input::-webkit-outer-spin-button,.mini-input::-webkit-inner-spin-button{ -webkit-appearance:none; }
-.mini-input:focus{ outline:none; border-color:var(–blue); }
+.mini-input:focus{ outline:none; border-color:var(–blue); background:var(–bg); }
 .mini-input.flash{ border-color:var(–green); }
-.field-lbl{ font-size:10px; color:var(–text3); }
-.saved-badge{ font-size:10px; color:var(–green); font-weight:500; opacity:0; transition:opacity 0.3s; white-space:nowrap; align-self:center; min-width:40px; }
+.field-lbl{ font-size:10px; color:var(–text3); white-space:nowrap; }
+.saved-badge{ font-size:9px; color:var(–green); font-weight:600; opacity:0; transition:opacity 0.3s; white-space:nowrap; position:absolute; bottom:6px; right:12px; pointer-events:none; letter-spacing:0.2px; }
 .saved-badge.visible{ opacity:1; }
-.last-badge{ font-size:10px; background:rgba(55,138,221,0.12); color:#185FA5; border-radius:99px; padding:2px 7px; white-space:nowrap; flex-shrink:0; }
-@media(prefers-color-scheme:dark){ .last-badge{ color:#85B7EB; background:rgba(55,138,221,0.2); } }
+.last-badge{ font-size:10px; background:rgba(232,150,10,0.15); color:#a06400; border-radius:99px; padding:1px 6px; white-space:nowrap; flex-shrink:0; font-weight:500; }
+@media(prefers-color-scheme:dark){ .last-badge{ color:#fbbf24; background:rgba(232,150,10,0.18); } }
 
+/* ── Per-session note ── */
+.session-note-wrap{
+padding:6px 12px 8px 12px;
+border-top:0.5px dashed var(–border2);
+}
+.session-note-input{
+width:100%; padding:4px 8px; font-size:11px; font-family:‘DM Sans’,sans-serif;
+border:0.5px dashed var(–border2); border-radius:var(–radius-sm);
+background:transparent; color:var(–text2); outline:none;
+transition:border-color 0.2s, background 0.2s, color 0.2s;
+}
+.session-note-input::placeholder{ color:var(–text3); }
+.session-note-input:focus{ border-color:var(–blue); border-style:solid; background:var(–bg2); color:var(–text); }
+
+/* ── Write schedule btn ── */
 .write-schedule-btn{ display:flex; align-items:center; justify-content:center; gap:6px; margin:12px auto 0; padding:7px 16px; font-size:12px; font-family:‘DM Sans’,sans-serif; color:var(–text3); background:transparent; border:0.5px solid var(–border); border-radius:99px; cursor:pointer; transition:color 0.15s,border-color 0.15s; }
 .write-schedule-btn:hover{ color:var(–text2); border-color:var(–border2); }
 
+/* ── Schedule editor ── */
 .schedule-editor{ margin-top:12px; background:var(–bg); border:0.5px solid var(–border2); border-radius:var(–radius); overflow:hidden; }
 .sch-header{ padding:12px 14px 0; }
 .sch-header h3{ font-size:13px; font-weight:600; margin-bottom:6px; }
@@ -112,10 +195,30 @@ header{ margin-bottom:20px; display:flex; align-items:flex-start; justify-conten
 .sch-err{ font-size:11px; color:#EF4444; padding:0 14px 8px; display:none; }
 .sch-err.visible{ display:block; }
 
-.note-wrap{ margin-top:12px; }
-.note-input{ width:100%; padding:9px 12px; font-size:13px; font-family:‘DM Sans’,sans-serif; border:0.5px solid var(–border); border-radius:var(–radius); background:var(–bg); color:var(–text); resize:none; }
-.note-input:focus{ outline:none; border-color:var(–blue); }
+/* ── Note section (today/tomorrow) ── */
+.note-wrap{ margin-top:12px; background:var(–card-bg); border:0.5px solid var(–card-border); border-radius:var(–radius); overflow:hidden; }
+.note-tabs{ display:flex; border-bottom:0.5px solid var(–border); }
+.note-tab-btn{ flex:1; padding:9px 6px; font-size:12px; font-family:‘DM Sans’,sans-serif; border:none; background:transparent; color:var(–text2); cursor:pointer; transition:all 0.15s; display:flex; align-items:center; justify-content:center; gap:5px; }
+.note-tab-btn.active{ background:var(–bg2); color:var(–text); font-weight:500; }
+.note-tab-btn.tmrw-tab.active{ background:rgba(245,158,11,0.08); color:#B45309; }
+@media(prefers-color-scheme:dark){ .note-tab-btn.tmrw-tab.active{ color:#FCD34D; } }
+.note-body{ display:none; padding:10px 12px; }
+.note-body.active{ display:block; }
+.note-input{ width:100%; padding:8px 10px; font-size:13px; font-family:‘DM Sans’,sans-serif; border:0.5px solid var(–border); border-radius:var(–radius-sm); background:var(–bg2); color:var(–text); resize:none; outline:none; transition:border-color 0.2s; line-height:1.5; }
+.note-input:focus{ border-color:var(–blue); }
+.note-input.tmrw-input:focus{ border-color:var(–amber); }
+.note-hint{ font-size:11px; color:var(–text3); margin-top:6px; line-height:1.5; }
+.tmrw-badge{ font-size:10px; font-weight:600; color:var(–amber); letter-spacing:0.3px; padding:1px 0; }
 
+/* ── Mood tags ── */
+.mood-section{ padding:0 12px 10px; }
+.mood-label{ font-size:11px; color:var(–text3); margin-bottom:7px; }
+.mood-tags{ display:flex; flex-wrap:wrap; gap:5px; }
+.mood-tag{ padding:5px 10px; font-size:11px; font-family:‘DM Sans’,sans-serif; border:0.5px solid var(–border2); border-radius:99px; background:transparent; color:var(–text2); cursor:pointer; transition:all 0.15s; white-space:nowrap; }
+.mood-tag.active{ background:rgba(245,158,11,0.12); border-color:rgba(245,158,11,0.45); color:#B45309; font-weight:500; }
+@media(prefers-color-scheme:dark){ .mood-tag.active{ color:#FCD34D; } }
+
+/* ── Charts ── */
 .chart-toggle{ display:flex; gap:6px; margin-bottom:12px; }
 .chart-btn{ padding:5px 14px; font-size:12px; font-family:‘DM Sans’,sans-serif; border:0.5px solid var(–border2); border-radius:99px; background:transparent; color:var(–text2); cursor:pointer; }
 .chart-btn.active{ background:var(–text); color:var(–bg); border-color:var(–text); }
@@ -123,11 +226,14 @@ header{ margin-bottom:20px; display:flex; align-items:flex-start; justify-conten
 .chart-legend{ display:flex; flex-wrap:wrap; gap:12px; font-size:12px; color:var(–text2); margin-bottom:16px; }
 .legend-dot{ width:10px; height:10px; border-radius:2px; display:inline-block; }
 
+/* ── History ── */
 .history-table{ width:100%; font-size:13px; border-collapse:collapse; background:var(–bg); border-radius:var(–radius); overflow:hidden; border:0.5px solid var(–border); }
 .history-table th{ text-align:left; padding:8px 10px; color:var(–text2); font-weight:400; font-size:11px; border-bottom:0.5px solid var(–border); background:var(–bg2); }
 .history-table td{ padding:9px 10px; border-bottom:0.5px solid var(–border); }
 .history-table tr:last-child td{ border-bottom:none; }
+.history-mood{ font-size:13px; }
 
+/* ── Settings ── */
 .settings-section{ background:var(–bg); border:0.5px solid var(–border); border-radius:var(–radius); padding:14px; margin-bottom:12px; }
 .settings-section h3{ font-size:13px; font-weight:500; margin-bottom:12px; }
 .setting-row{ display:flex; align-items:center; justify-content:space-between; margin-bottom:10px; }
@@ -139,8 +245,8 @@ header{ margin-bottom:20px; display:flex; align-items:flex-start; justify-conten
 .io-btn:hover{ background:var(–bg2); }
 .io-note{ font-size:11px; color:var(–text3); margin-top:8px; line-height:1.6; }
 .empty{ text-align:center; padding:24px; color:var(–text2); font-size:13px; }
-.watermark{ text-align:center; margin-top:32px; font-family:‘DM Serif Display’,serif; font-style:italic; font-size:13px; color:var(–text3); }
-.watermark span{ color:var(–accent); }
+.watermark{ text-align:center; margin-top:32px; font-family:‘Playfair Display’,Georgia,serif; font-style:italic; font-size:13px; color:var(–text3); }
+.watermark span{ color:var(–amber); }
 </style>
 
 </head>
@@ -163,6 +269,16 @@ header{ margin-bottom:20px; display:flex; align-items:flex-start; justify-conten
     </div>
   </header>
 
+  <!-- Session notes toggle strip -->
+
+  <div class="snotes-strip">
+    <span class="snotes-strip-text"><strong>Session notes</strong> — add a note to each pump</span>
+    <label class="toggle">
+      <input type="checkbox" id="snotes-toggle" onchange="setSessionNotes(this.checked)"/>
+      <div class="toggle-track"></div>
+    </label>
+  </div>
+
   <div class="tabs">
     <button class="tab active" onclick="switchTab('log',this)">Log</button>
     <button class="tab" onclick="switchTab('charts',this)">Charts</button>
@@ -176,15 +292,27 @@ header{ margin-bottom:20px; display:flex; align-items:flex-start; justify-conten
       <div class="date-label" id="date-label"></div>
       <button class="date-nav" onclick="changeDay(1)">›</button>
     </div>
-    <div class="summary-row">
-      <div class="metric"><div class="metric-val" id="sum-total">0</div><div class="metric-lbl">total today</div></div>
-      <div class="metric"><div class="metric-val" id="sum-sessions">0/9</div><div class="metric-lbl">sessions done</div></div>
-      <div class="metric"><div class="metric-val" id="sum-avg">—</div><div class="metric-lbl">avg / session</div></div>
-      <div class="metric highlight"><div class="metric-val" id="sum-last">—</div><div class="metric-lbl">last session</div></div>
-    </div>
-    <div class="session-list" id="session-list"></div>
 
 ```
+<!-- Plan-ahead banner (shown when tomorrow note exists) -->
+<div class="plan-banner" id="plan-banner" style="display:none">
+  <div class="plan-banner-icon">🌙</div>
+  <div class="plan-banner-body">
+    <div class="plan-banner-label">You planned for today</div>
+    <div id="plan-banner-text"></div>
+    <div class="plan-banner-dismiss" onclick="dismissPlanBanner()">Dismiss</div>
+  </div>
+</div>
+
+<div class="summary-row">
+  <div class="metric"><div class="metric-val" id="sum-total">0</div><div class="metric-lbl">total today</div></div>
+  <div class="metric"><div class="metric-val" id="sum-sessions">0/8</div><div class="metric-lbl">sessions done</div></div>
+  <div class="metric"><div class="metric-val" id="sum-avg">—</div><div class="metric-lbl">avg / session</div></div>
+  <div class="metric highlight"><div class="metric-val" id="sum-last">—</div><div class="metric-lbl">last session</div></div>
+</div>
+
+<div class="session-list" id="session-list"></div>
+
 <button class="write-schedule-btn" id="write-schedule-btn" onclick="openEditor()">
   <svg width="11" height="11" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"><path d="M8.5 1.5a1.5 1.5 0 0 1 2 2L4 10H2v-2L8.5 1.5z"/></svg>
   Write your own schedule
@@ -204,8 +332,26 @@ header{ margin-bottom:20px; display:flex; align-items:flex-start; justify-conten
   </div>
 </div>
 
+<!-- Note section with Today / Tomorrow tabs + mood tags -->
 <div class="note-wrap">
-  <textarea class="note-input" id="day-note" rows="2" placeholder="Day note (optional)..." oninput="saveNote()"></textarea>
+  <div class="note-tabs">
+    <button class="note-tab-btn active" id="note-tab-today" onclick="switchNoteTab('today')">📝 Today</button>
+    <button class="note-tab-btn tmrw-tab" id="note-tab-tmrw" onclick="switchNoteTab('tmrw')">🌙 Tomorrow</button>
+  </div>
+
+  <div class="note-body active" id="note-body-today">
+    <textarea class="note-input" id="note-today" rows="2" placeholder="How did today go? Anything to remember…" oninput="saveNote('today')"></textarea>
+    <div class="mood-section" style="padding:8px 0 0">
+      <div class="mood-label">How are you feeling?</div>
+      <div class="mood-tags" id="mood-tags"></div>
+    </div>
+  </div>
+
+  <div class="note-body" id="note-body-tmrw">
+    <div class="tmrw-badge">🌙 Plan for tomorrow</div>
+    <textarea class="note-input tmrw-input" id="note-tmrw" rows="2" placeholder="Leave yourself a note for tomorrow — try an earlier session, cluster feed after 5 pm…" oninput="saveNote('tmrw')" style="margin-top:6px"></textarea>
+    <div class="note-hint">This will appear at the top of tomorrow's log as a reminder from you.</div>
+  </div>
 </div>
 ```
 
@@ -213,7 +359,7 @@ header{ margin-bottom:20px; display:flex; align-items:flex-start; justify-conten
 
   <div id="tab-charts" class="panel">
     <div class="chart-toggle">
-      <button class="chart-btn active" onclick="setChartView('daily',this)">Daily total</button>
+      <button class="chart-btn active" onclick="setChartView('daily',this)">Daily total &amp; average</button>
       <button class="chart-btn" onclick="setChartView('sessions',this)">By session</button>
     </div>
     <div class="chart-wrap"><canvas id="mainChart"></canvas></div>
@@ -222,7 +368,7 @@ header{ margin-bottom:20px; display:flex; align-items:flex-start; justify-conten
 
   <div id="tab-history" class="panel">
     <table class="history-table">
-      <thead><tr><th>Date</th><th id="history-unit-header">Total (oz)</th><th>Sessions</th><th>Note</th></tr></thead>
+      <thead><tr><th>Date</th><th id="history-unit-header">Total (oz)</th><th>Sessions</th><th>Mood</th><th>Note</th></tr></thead>
       <tbody id="history-body"></tbody>
     </table>
   </div>
@@ -259,172 +405,230 @@ header{ margin-bottom:20px; display:flex; align-items:flex-start; justify-conten
 </div>
 
 <script>
-// ── Storage (uses window.storage API; falls back to in-memory) ──────────────
+// ── Storage ──────────────────────────────────────────────────────────────────
 const store = {
-  _mem: {},
-  async get(k) {
-    try {
-      if (window.storage) { const r = await window.storage.get(k); return r ? r.value : null; }
-    } catch(e) {}
-    return this._mem[k] ?? null;
-  },
-  async set(k, v) {
-    try {
-      if (window.storage) { await window.storage.set(k, v); return; }
-    } catch(e) {}
-    this._mem[k] = v;
-  }
+  _mem:{},
+  async get(k){ try{ if(window.storage){const r=await window.storage.get(k);return r?r.value:null;} }catch(e){} return this._mem[k]??null; },
+  async set(k,v){ try{ if(window.storage){await window.storage.set(k,v);return;} }catch(e){} this._mem[k]=v; }
 };
 
-// ── Schedule helpers ────────────────────────────────────────────────────────
-function roundToHalf(m) { return Math.round(m / 30) * 30; }
-
-function buildEvenSchedule(n) {
-  const interval = (24 * 60) / n;
-  // Generate slots evenly from midnight, rounded to nearest :00 or :30
-  const slots = Array.from({length: n}, (_, i) =>
-    roundToHalf(i * interval) % 1440
-  );
-  // Sort chronologically (they should already be, but make it explicit)
-  slots.sort((a, b) => a - b);
-  return slots.map((m, i) => ({
-    time: minsToLabel(m),
-    name: `Session ${i + 1}`
-  }));
+// ── Contextual label from time ────────────────────────────────────────────────
+function contextLabel(timeStr) {
+  const m = parseTime(timeStr);
+  if (m === null) return '';
+  if (m < 90)   return 'Late night';      // 12:00–1:30 am
+  if (m < 270)  return 'Overnight';       // 1:30–4:30 am
+  if (m < 390)  return 'Early morning';   // 4:30–6:30 am
+  if (m < 510)  return 'Morning';         // 6:30–8:30 am
+  if (m < 660)  return 'Mid-morning';     // 8:30–11:00 am
+  if (m < 780)  return 'Midday';          // 11:00 am–1:00 pm
+  if (m < 960)  return 'Afternoon';       // 1:00–4:00 pm
+  if (m < 1110) return 'Late afternoon';  // 4:00–6:30 pm
+  if (m < 1260) return 'Evening';         // 6:30–9:00 pm
+  return 'Before bed';                    // 9:00–11:59 pm
 }
 
-function minsToLabel(m) {
-  m = ((m % 1440) + 1440) % 1440;
-  const h = Math.floor(m / 60), min = m % 60;
-  const h12 = h === 0 ? 12 : h > 12 ? h - 12 : h;
-  return `${h12}:${String(min).padStart(2,'0')} ${h < 12 ? 'am' : 'pm'}`;
+// ── Mood tags config ──────────────────────────────────────────────────────────
+const MOOD_OPTIONS = [
+  { id:'tired',   emoji:'😴', label:'Tired'        },
+  { id:'low',     emoji:'💧', label:'Low supply'   },
+  { id:'good',    emoji:'💪', label:'Good day'     },
+  { id:'unwell',  emoji:'🤒', label:'Unwell'       },
+  { id:'relaxed', emoji:'😌', label:'Relaxed'      },
+  { id:'baby',    emoji:'🍼', label:'Baby fed well'},
+];
+
+// ── Schedule helpers ──────────────────────────────────────────────────────────
+function roundToHalf(m){ return Math.round(m/30)*30; }
+function buildEvenSchedule(n){
+  const interval=(24*60)/n;
+  const slots=Array.from({length:n},(_,i)=>roundToHalf(i*interval)%1440);
+  slots.sort((a,b)=>a-b);
+  return slots.map((m,i)=>({time:minsToLabel(m),name:`Session ${i+1}`}));
+}
+function minsToLabel(m){
+  m=((m%1440)+1440)%1440;
+  const h=Math.floor(m/60),min=m%60,h12=h===0?12:h>12?h-12:h;
+  return `${h12}:${String(min).padStart(2,'0')} ${h<12?'am':'pm'}`;
+}
+function parseTime(str){
+  const m=str.trim().match(/^(\d{1,2}):(\d{2})\s*(am|pm)$/i);
+  if(!m)return null;
+  let h=parseInt(m[1]),min=parseInt(m[2]),p=m[3].toLowerCase();
+  if(h<1||h>12||min<0||min>59)return null;
+  if(p==='am'){if(h===12)h=0;}else{if(h!==12)h+=12;}
+  return h*60+min;
 }
 
-function parseTime(str) {
-  const m = str.trim().match(/^(\d{1,2}):(\d{2})\s*(am|pm)$/i);
-  if (!m) return null;
-  let h = parseInt(m[1]), min = parseInt(m[2]), p = m[3].toLowerCase();
-  if (h < 1 || h > 12 || min < 0 || min > 59) return null;
-  if (p === 'am') { if (h === 12) h = 0; } else { if (h !== 12) h += 12; }
-  return h * 60 + min;
+// ── State ─────────────────────────────────────────────────────────────────────
+let currentDate=new Date(); currentDate.setHours(0,0,0,0);
+let data={}, chartView='daily', chartInst=null;
+let unit='oz', sessionCount=8, customSchedule=null;
+let showSessionNotes=true;  // Feature D toggle
+let planBannerDismissed=false;
+const saveTimers={};
+
+function getSchedule(){
+  return (customSchedule&&customSchedule.length===sessionCount)?customSchedule:buildEvenSchedule(sessionCount);
 }
 
-// ── State ───────────────────────────────────────────────────────────────────
-let currentDate = new Date(); currentDate.setHours(0,0,0,0);
-let data = {}, chartView = 'daily', chartInst = null;
-let unit = 'oz', sessionCount = 8, customSchedule = null;
-const saveTimers = {};
+// ── Unit helpers ──────────────────────────────────────────────────────────────
+function ozToMl(v){return Math.round(v*29.5735*10)/10;}
+function mlToOz(v){return Math.round(v/29.5735*1000)/1000;}
+function displayVal(oz){const n=parseFloat(oz);return(oz===''||isNaN(n))?'':(unit==='ml'?ozToMl(n):n);}
+function storeVal(v){const n=parseFloat(v);return isNaN(n)?'':(unit==='ml'?mlToOz(n):n);}
+function unitLabel(){return unit==='ml'?'ml':'oz';}
 
-function getSchedule() {
-  return (customSchedule && customSchedule.length === sessionCount)
-    ? customSchedule : buildEvenSchedule(sessionCount);
-}
-
-// ── Unit helpers ─────────────────────────────────────────────────────────────
-function ozToMl(v) { return Math.round(v * 29.5735 * 10) / 10; }
-function mlToOz(v) { return Math.round(v / 29.5735 * 1000) / 1000; }
-function displayVal(oz) { const n = parseFloat(oz); return (oz === '' || isNaN(n)) ? '' : (unit === 'ml' ? ozToMl(n) : n); }
-function storeVal(v) { const n = parseFloat(v); return isNaN(n) ? '' : (unit === 'ml' ? mlToOz(n) : n); }
-function unitLabel() { return unit === 'ml' ? 'ml' : 'oz'; }
-
-// ── Persistence ──────────────────────────────────────────────────────────────
-async function loadData() {
-  try {
-    const s = await store.get('dropwise_v2');
-    if (s) {
-      const p = JSON.parse(s);
-      data = p.data || {};
-      unit = p.unit || 'oz';
-      sessionCount = p.sessionCount || 8;
-      customSchedule = p.customSchedule || null;
+// ── Persistence ───────────────────────────────────────────────────────────────
+async function loadData(){
+  try{
+    const s=await store.get('dropwise_v2');
+    if(s){
+      const p=JSON.parse(s);
+      data=p.data||{}; unit=p.unit||'oz'; sessionCount=p.sessionCount||8;
+      customSchedule=p.customSchedule||null;
+      showSessionNotes=p.showSessionNotes!==undefined?p.showSessionNotes:true;
     }
-  } catch(e) {}
+  }catch(e){}
 }
-
-async function persist() {
-  try {
-    await store.set('dropwise_v2', JSON.stringify({data, unit, sessionCount, customSchedule}));
-  } catch(e) {}
+async function persist(){
+  try{ await store.set('dropwise_v2',JSON.stringify({data,unit,sessionCount,customSchedule,showSessionNotes})); }catch(e){}
 }
-
-function dateKey(d) { return d.toISOString().split('T')[0]; }
-function fmtDate(d) {
-  const today = new Date(); today.setHours(0,0,0,0);
-  const diff = (d - today) / 86400000;
-  if (diff === 0) return 'Today';
-  if (diff === -1) return 'Yesterday';
-  return d.toLocaleDateString('en-US', {weekday:'short', month:'short', day:'numeric'});
+function dateKey(d){return d.toISOString().split('T')[0];}
+function fmtDate(d){
+  const today=new Date();today.setHours(0,0,0,0);
+  const diff=(d-today)/86400000;
+  if(diff===0)return'Today';if(diff===-1)return'Yesterday';
+  return d.toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'});
 }
 
 // ── Prefs UI ──────────────────────────────────────────────────────────────────
-function buildSelect(el, val) {
-  el.innerHTML = '';
-  for (let i = 2; i <= 12; i++) {
-    const o = document.createElement('option');
-    o.value = String(i); o.textContent = i;
-    el.appendChild(o);
-  }
-  el.value = String(val);
+function buildSelect(el,val){
+  el.innerHTML='';
+  for(let i=2;i<=12;i++){const o=document.createElement('option');o.value=String(i);o.textContent=i;el.appendChild(o);}
+  el.value=String(val);
 }
-
-function syncPrefsUI() {
-  buildSelect(document.getElementById('sessions-select'), sessionCount);
-  buildSelect(document.getElementById('sessions-select-settings'), sessionCount);
-  document.getElementById('unit-select-settings').value = unit;
-  document.getElementById('unit-oz').classList.toggle('active', unit === 'oz');
-  document.getElementById('unit-ml').classList.toggle('active', unit === 'ml');
+function syncPrefsUI(){
+  buildSelect(document.getElementById('sessions-select'),sessionCount);
+  buildSelect(document.getElementById('sessions-select-settings'),sessionCount);
+  document.getElementById('unit-select-settings').value=unit;
+  document.getElementById('unit-oz').classList.toggle('active',unit==='oz');
+  document.getElementById('unit-ml').classList.toggle('active',unit==='ml');
+  document.getElementById('snotes-toggle').checked=showSessionNotes;
 }
-
-function setUnit(u) { unit = u; persist(); syncPrefsUI(); renderLog(); updateHistoryHeader(); }
-
-function setSessionCount(v) {
-  sessionCount = parseInt(v);
-  if (customSchedule && customSchedule.length !== sessionCount) customSchedule = null;
-  persist(); syncPrefsUI(); renderLog();
+function setUnit(u){unit=u;persist();syncPrefsUI();renderLog();updateHistoryHeader();}
+function setSessionCount(v){
+  sessionCount=parseInt(v);
+  if(customSchedule&&customSchedule.length!==sessionCount)customSchedule=null;
+  persist();syncPrefsUI();renderLog();
 }
-
-function updateHistoryHeader() {
-  document.getElementById('history-unit-header').textContent = `Total (${unitLabel()})`;
-}
+function setSessionNotes(val){showSessionNotes=val;persist();renderLog();}
+function updateHistoryHeader(){document.getElementById('history-unit-header').textContent=`Total (${unitLabel()})`;}
 
 // ── Day data ──────────────────────────────────────────────────────────────────
-function getDayData(key) {
-  if (!data[key]) data[key] = {sessions: Array(12).fill(null).map(() => ({oz:'', min:'', done:false})), note:''};
-  while (data[key].sessions.length < 12) data[key].sessions.push({oz:'', min:'', done:false});
+function getDayData(key){
+  if(!data[key])data[key]={sessions:Array(12).fill(null).map(()=>({oz:'',min:'',done:'',customName:'',sessionNote:''})),note:'',noteTmrw:'',moods:[],planDismissed:false};
+  while(data[key].sessions.length<12)data[key].sessions.push({oz:'',min:'',done:false,customName:'',sessionNote:''});
+  data[key].sessions.forEach(s=>{
+    if(s.done===undefined)s.done=false;
+    if(s.customName===undefined)s.customName='';
+    if(s.sessionNote===undefined)s.sessionNote='';
+  });
+  if(!data[key].moods)data[key].moods=[];
+  if(!data[key].noteTmrw)data[key].noteTmrw='';
   return data[key];
 }
+function changeDay(d){currentDate=new Date(currentDate.getTime()+d*86400000);planBannerDismissed=false;renderLog();}
 
-function changeDay(d) { currentDate = new Date(currentDate.getTime() + d * 86400000); renderLog(); }
-
-function flashSaved(badge, inp) {
-  if (inp) { inp.classList.add('flash'); setTimeout(() => inp.classList.remove('flash'), 600); }
-  badge.textContent = 'saved ✓'; badge.classList.add('visible');
+function flashSaved(badge,inp){
+  if(inp){inp.classList.add('flash');setTimeout(()=>inp.classList.remove('flash'),600);}
+  badge.textContent='saved ✓';badge.classList.add('visible');
   clearTimeout(saveTimers[badge.dataset.idx]);
-  saveTimers[badge.dataset.idx] = setTimeout(() => badge.classList.remove('visible'), 1600);
+  saveTimers[badge.dataset.idx]=setTimeout(()=>badge.classList.remove('visible'),1600);
+}
+
+// ── Plan banner ───────────────────────────────────────────────────────────────
+function renderPlanBanner(){
+  // Show yesterday's "tomorrow" note as today's plan banner
+  const yesterday=new Date(currentDate.getTime()-86400000);
+  const yday=data[dateKey(yesterday)];
+  const banner=document.getElementById('plan-banner');
+  if(yday&&yday.noteTmrw&&yday.noteTmrw.trim()&&!planBannerDismissed){
+    document.getElementById('plan-banner-text').textContent=yday.noteTmrw.trim();
+    banner.style.display='flex';
+  } else {
+    banner.style.display='none';
+  }
+}
+function dismissPlanBanner(){planBannerDismissed=true;document.getElementById('plan-banner').style.display='none';}
+
+// ── Note tabs ─────────────────────────────────────────────────────────────────
+let activeNoteTab='today';
+function switchNoteTab(tab){
+  activeNoteTab=tab;
+  document.querySelectorAll('.note-tab-btn').forEach(b=>b.classList.remove('active'));
+  document.querySelectorAll('.note-body').forEach(b=>b.classList.remove('active'));
+  document.getElementById('note-tab-'+tab).classList.add('active');
+  document.getElementById('note-body-'+tab).classList.add('active');
+}
+function saveNote(tab){
+  const key=dateKey(currentDate),day=getDayData(key);
+  const val=document.getElementById('note-'+tab).value;
+  if(tab==='today')day.note=val; else day.noteTmrw=val;
+  persist();
+}
+
+// ── Mood tags ─────────────────────────────────────────────────────────────────
+function renderMoodTags(){
+  const key=dateKey(currentDate),day=getDayData(key);
+  const container=document.getElementById('mood-tags');
+  container.innerHTML='';
+  MOOD_OPTIONS.forEach(m=>{
+    const btn=document.createElement('button');
+    btn.className='mood-tag'+(day.moods.includes(m.id)?' active':'');
+    btn.textContent=m.emoji+' '+m.label;
+    btn.onclick=()=>toggleMood(m.id);
+    container.appendChild(btn);
+  });
+}
+function toggleMood(id){
+  const key=dateKey(currentDate),day=getDayData(key);
+  const idx=day.moods.indexOf(id);
+  if(idx>=0)day.moods.splice(idx,1); else day.moods.push(id);
+  persist();renderMoodTags();
 }
 
 // ── Log ───────────────────────────────────────────────────────────────────────
-let cardDragSrc = null;
+let cardDragSrc=null;
 
-function renderLog() {
-  const key = dateKey(currentDate), day = getDayData(key);
-  document.getElementById('date-label').textContent = fmtDate(currentDate);
-  document.getElementById('day-note').value = day.note || '';
-  const schedule = getSchedule(), list = document.getElementById('session-list');
-  list.innerHTML = '';
-  schedule.forEach((ses, i) => buildSessionCard(list, i, ses, day));
+function renderLog(){
+  const key=dateKey(currentDate),day=getDayData(key);
+  document.getElementById('date-label').textContent=fmtDate(currentDate);
+  document.getElementById('note-today').value=day.note||'';
+  document.getElementById('note-tmrw').value=day.noteTmrw||'';
+  renderPlanBanner();
+  renderMoodTags();
+  const schedule=getSchedule(),list=document.getElementById('session-list');
+  list.innerHTML='';
+  schedule.forEach((ses,i)=>buildSessionCard(list,i,ses,day));
   updateSummary(day);
 }
 
-function buildSessionCard(list, i, ses, day) {
-  const s = day.sessions[i], isDone = !!s.done;
-  const card = document.createElement('div');
-  card.className = 'session-card' + (isDone ? ' done' : ''); card.id = 'card-' + i;
-  card.dataset.idx = i;
+function buildSessionCard(list,i,ses,day){
+  const s=day.sessions[i],isDone=!!s.done;
+  const hasValue=s.oz!==''&&parseFloat(s.oz)>0;
+  const card=document.createElement('div');
+  card.className='session-card'+(isDone?' done':'')+(hasValue&&!isDone?' has-value':'');
+  card.id='card-'+i; card.dataset.idx=i;
 
-  const nameVal = s.customName || ses.name;
+  // Contextual label: use customName if set, else auto from time
+  const autoLabel=contextLabel(ses.time);
+  const nameVal=s.customName||autoLabel;
+  const isCustom=!!s.customName;
 
-  card.innerHTML = `
+  const main=document.createElement('div');
+  main.className='card-main';
+  main.innerHTML=`
     <div class="card-grip" title="Hold to reorder">
       <svg width="14" height="14" viewBox="0 0 14 14" xmlns="http://www.w3.org/2000/svg">
         <circle cx="4.5" cy="3.5"  r="1.2" fill="#888"/>
@@ -435,455 +639,316 @@ function buildSessionCard(list, i, ses, day) {
         <circle cx="9.5" cy="10.5" r="1.2" fill="#888"/>
       </svg>
     </div>
-    <button class="dot-btn${isDone?' done':''}" onclick="toggleDone(${i})"></button>
+    <div class="s-num">${i+1}</div>
+    <button class="dot-btn${isDone?' done':''}" id="dot-${i}" onclick="toggleDone(${i})"></button>
     <div class="s-info">
       <div class="s-time" id="stime-${i}" title="Tap to edit time" onclick="editSessionTime(${i})">${ses.time}</div>
-      <div class="s-name" id="sname-${i}" title="Tap to rename" onclick="editSessionName(${i})">${nameVal}</div>
+      <div class="s-name${isCustom?' custom-name':''}" id="sname-${i}" title="Tap to rename" onclick="editSessionName(${i})">${nameVal}</div>
     </div>
     <div class="s-inputs">
       <div class="field"><input class="mini-input" type="number" min="0" step="${unit==='ml'?1:0.1}" placeholder="0" value="${displayVal(s.oz)}" oninput="updateSession(${i},'oz',this.value,this)"/><span class="field-lbl">${unitLabel()}</span></div>
       <div class="field"><input class="mini-input" type="number" min="0" placeholder="0" value="${s.min}" oninput="updateSession(${i},'min',this.value,this)"/><span class="field-lbl">min</span></div>
-      <span class="saved-badge" id="badge-${i}" data-idx="${i}"></span>
-    </div>`;
+    </div>
+    <span class="saved-badge" id="badge-${i}" data-idx="${i}"></span>`;
+  card.appendChild(main);
 
-  // ── Card drag (mouse) ──
-  const grip = card.querySelector('.card-grip');
-  grip.addEventListener('mousedown', () => card.setAttribute('draggable','true'));
-  grip.addEventListener('mouseup',   () => card.setAttribute('draggable','false'));
-  card.addEventListener('dragstart', e => {
-    cardDragSrc = card; card.classList.add('card-dragging');
-    e.dataTransfer.effectAllowed = 'move';
-  });
-  card.addEventListener('dragend', () => {
-    card.setAttribute('draggable','false');
-    card.classList.remove('card-dragging');
-    document.querySelectorAll('.session-card').forEach(c => c.classList.remove('card-drag-over'));
-  });
-  card.addEventListener('dragover', e => {
-    e.preventDefault();
-    if (card !== cardDragSrc) {
-      document.querySelectorAll('.session-card').forEach(c => c.classList.remove('card-drag-over'));
-      card.classList.add('card-drag-over');
-    }
-  });
-  card.addEventListener('drop', e => {
-    e.preventDefault();
-    if (cardDragSrc && cardDragSrc !== card) reorderCards(cardDragSrc, card);
-  });
-
-  // ── Card drag (touch) ──
-  let cardTouchTarget = null;
-  grip.addEventListener('touchstart', e => {
-    cardDragSrc = card; card.classList.add('card-dragging');
-    e.preventDefault();
-  }, {passive:false});
-  grip.addEventListener('touchmove', e => {
-    e.preventDefault();
-    const touch = e.touches[0];
-    document.querySelectorAll('.session-card').forEach(c => {
-      c.classList.remove('card-drag-over');
-      const rect = c.getBoundingClientRect();
-      if (touch.clientY >= rect.top && touch.clientY <= rect.bottom && c !== cardDragSrc) {
-        c.classList.add('card-drag-over'); cardTouchTarget = c;
-      }
+  // Per-session note (Feature D — only if enabled)
+  if(showSessionNotes){
+    const noteWrap=document.createElement('div');
+    noteWrap.className='session-note-wrap';
+    const inp=document.createElement('input');
+    inp.className='session-note-input';
+    inp.type='text'; inp.value=s.sessionNote||'';
+    inp.placeholder='Add a note for this session…';
+    inp.maxLength=120;
+    inp.addEventListener('change',()=>{
+      getDayData(dateKey(currentDate)).sessions[i].sessionNote=inp.value;
+      persist();
     });
-  }, {passive:false});
-  grip.addEventListener('touchend', () => {
-    card.classList.remove('card-dragging');
-    if (cardTouchTarget) { reorderCards(cardDragSrc, cardTouchTarget); cardTouchTarget = null; }
-    cardDragSrc = null;
-  });
+    noteWrap.appendChild(inp);
+    card.appendChild(noteWrap);
+  }
+
+  // Drag — mouse
+  const grip=card.querySelector('.card-grip');
+  grip.addEventListener('mousedown',()=>card.setAttribute('draggable','true'));
+  grip.addEventListener('mouseup',()=>card.setAttribute('draggable','false'));
+  card.addEventListener('dragstart',e=>{cardDragSrc=card;card.classList.add('card-dragging');e.dataTransfer.effectAllowed='move';});
+  card.addEventListener('dragend',()=>{card.setAttribute('draggable','false');card.classList.remove('card-dragging');document.querySelectorAll('.session-card').forEach(c=>c.classList.remove('card-drag-over'));});
+  card.addEventListener('dragover',e=>{e.preventDefault();if(card!==cardDragSrc){document.querySelectorAll('.session-card').forEach(c=>c.classList.remove('card-drag-over'));card.classList.add('card-drag-over');}});
+  card.addEventListener('drop',e=>{e.preventDefault();if(cardDragSrc&&cardDragSrc!==card)reorderCards(cardDragSrc,card);});
+
+  // Drag — touch
+  let cardTouchTarget=null;
+  grip.addEventListener('touchstart',e=>{cardDragSrc=card;card.classList.add('card-dragging');e.preventDefault();},{passive:false});
+  grip.addEventListener('touchmove',e=>{e.preventDefault();const t=e.touches[0];document.querySelectorAll('.session-card').forEach(c=>{c.classList.remove('card-drag-over');const r=c.getBoundingClientRect();if(t.clientY>=r.top&&t.clientY<=r.bottom&&c!==cardDragSrc){c.classList.add('card-drag-over');cardTouchTarget=c;}});},{passive:false});
+  grip.addEventListener('touchend',()=>{card.classList.remove('card-dragging');if(cardTouchTarget){reorderCards(cardDragSrc,cardTouchTarget);cardTouchTarget=null;}cardDragSrc=null;});
 
   list.appendChild(card);
 }
 
-function reorderCards(from, to) {
-  const key = dateKey(currentDate), day = getDayData(key);
-  const cards = [...document.querySelectorAll('.session-card')];
-  const fi = cards.indexOf(from), ti = cards.indexOf(to);
-  if (fi < 0 || ti < 0) return;
-  // Swap session data
-  [day.sessions[fi], day.sessions[ti]] = [day.sessions[ti], day.sessions[fi]];
-  // Swap schedule entries in customSchedule (or build one from even schedule first)
-  const schedule = getSchedule().map(s => ({...s}));
-  [schedule[fi], schedule[ti]] = [schedule[ti], schedule[fi]];
-  customSchedule = schedule;
-  persist();
-  renderLog();
+function reorderCards(from,to){
+  const key=dateKey(currentDate),day=getDayData(key);
+  const cards=[...document.querySelectorAll('.session-card')];
+  const fi=cards.indexOf(from),ti=cards.indexOf(to);
+  if(fi<0||ti<0)return;
+  [day.sessions[fi],day.sessions[ti]]=[day.sessions[ti],day.sessions[fi]];
+  const schedule=getSchedule().map(s=>({...s}));
+  [schedule[fi],schedule[ti]]=[schedule[ti],schedule[fi]];
+  customSchedule=schedule;persist();renderLog();
 }
 
 // ── Editable session name ─────────────────────────────────────────────────────
-function editSessionName(i) {
-  const el = document.getElementById('sname-' + i);
-  if (!el) return;
-  const day = getDayData(dateKey(currentDate));
-  const schedule = getSchedule();
-  const current = day.sessions[i].customName || schedule[i].name;
-  const inp = document.createElement('input');
-  inp.className = 's-name-input'; inp.type = 'text'; inp.value = current;
-  inp.maxLength = 40;
-  el.replaceWith(inp); inp.focus(); inp.select();
-  function commit() {
-    const val = inp.value.trim() || schedule[i].name;
-    day.sessions[i].customName = val === schedule[i].name ? '' : val;
+function editSessionName(i){
+  const el=document.getElementById('sname-'+i);if(!el)return;
+  const day=getDayData(dateKey(currentDate));
+  const schedule=getSchedule();
+  const autoLabel=contextLabel(schedule[i].time);
+  const current=day.sessions[i].customName||autoLabel;
+  const inp=document.createElement('input');
+  inp.className='s-name-input';inp.type='text';inp.value=current;inp.maxLength=40;
+  el.replaceWith(inp);inp.focus();inp.select();
+  function commit(){
+    const val=inp.value.trim()||autoLabel;
+    day.sessions[i].customName=val===autoLabel?'':val;
     persist();
-    const span = document.createElement('div');
-    span.className = 's-name'; span.id = 'sname-' + i;
-    span.title = 'Tap to rename'; span.textContent = val;
-    span.onclick = () => editSessionName(i);
+    const span=document.createElement('div');
+    span.className='s-name'+(day.sessions[i].customName?' custom-name':'');
+    span.id='sname-'+i;span.title='Tap to rename';span.textContent=val;
+    span.onclick=()=>editSessionName(i);
     inp.replaceWith(span);
   }
-  inp.addEventListener('blur', commit);
-  inp.addEventListener('keydown', e => { if (e.key === 'Enter') inp.blur(); if (e.key === 'Escape') { inp.value = current; inp.blur(); } });
+  inp.addEventListener('blur',commit);
+  inp.addEventListener('keydown',e=>{if(e.key==='Enter')inp.blur();if(e.key==='Escape'){inp.value=current;inp.blur();}});
 }
 
 // ── Editable session time ─────────────────────────────────────────────────────
-function editSessionTime(i) {
-  const el = document.getElementById('stime-' + i);
-  if (!el) return;
-  const schedule = getSchedule();
-  const current = schedule[i].time;
-  const inp = document.createElement('input');
-  inp.className = 's-time-input'; inp.type = 'text'; inp.value = current;
-  inp.placeholder = 'e.g. 9:00 am'; inp.maxLength = 10;
-  el.replaceWith(inp); inp.focus(); inp.select();
-  function commit() {
-    const raw = inp.value.trim();
-    const valid = parseTime(raw) !== null;
-    const val = valid ? raw.toLowerCase() : current;
-    // Save into customSchedule so it persists for future days
-    const sched = getSchedule().map(s => ({...s}));
-    sched[i] = {...sched[i], time: val};
-    customSchedule = sched;
-    persist();
-    const span = document.createElement('div');
-    span.className = 's-time'; span.id = 'stime-' + i;
-    span.title = 'Tap to edit time'; span.textContent = val;
-    span.onclick = () => editSessionTime(i);
-    inp.replaceWith(span);
+function editSessionTime(i){
+  const el=document.getElementById('stime-'+i);if(!el)return;
+  const schedule=getSchedule();const current=schedule[i].time;
+  const inp=document.createElement('input');
+  inp.className='s-time-input';inp.type='text';inp.value=current;inp.placeholder='e.g. 9:00 am';inp.maxLength=10;
+  el.replaceWith(inp);inp.focus();inp.select();
+  function commit(){
+    const raw=inp.value.trim();const valid=parseTime(raw)!==null;const val=valid?raw.toLowerCase():current;
+    const sched=getSchedule().map(s=>({...s}));sched[i]={...sched[i],time:val};customSchedule=sched;persist();
+    const span=document.createElement('div');
+    span.className='s-time';span.id='stime-'+i;span.title='Tap to edit time';span.textContent=val;
+    span.onclick=()=>editSessionTime(i);inp.replaceWith(span);
+    // Update auto-label if name isn't custom
+    const day=getDayData(dateKey(currentDate));
+    if(!day.sessions[i].customName){
+      const nameEl=document.getElementById('sname-'+i);
+      if(nameEl)nameEl.textContent=contextLabel(val);
+    }
   }
-  inp.addEventListener('blur', commit);
-  inp.addEventListener('keydown', e => { if (e.key === 'Enter') inp.blur(); if (e.key === 'Escape') { inp.value = current; inp.blur(); } });
+  inp.addEventListener('blur',commit);
+  inp.addEventListener('keydown',e=>{if(e.key==='Enter')inp.blur();if(e.key==='Escape'){inp.value=current;inp.blur();}});
 }
 
-function updateSummary(day) {
-  let totalOz = 0, logged = 0, lastOz = null, lastIdx = -1;
-  for (let i = 0; i < sessionCount; i++) {
-    const s = day.sessions[i];
-    if (s.oz !== '') { const v = parseFloat(s.oz)||0; totalOz += v; logged++; lastOz = v; lastIdx = i; }
+// ── Summary ───────────────────────────────────────────────────────────────────
+function updateSummary(day){
+  let totalOz=0,logged=0,lastOz=null,lastIdx=-1;
+  for(let i=0;i<sessionCount;i++){
+    const s=day.sessions[i];
+    if(s.oz!==''){const v=parseFloat(s.oz)||0;totalOz+=v;logged++;lastOz=v;lastIdx=i;}
   }
-  const done = day.sessions.slice(0, sessionCount).filter(s => s.done).length;
-  const isml = unit === 'ml', conv = v => isml ? ozToMl(v) : v, fmt = v => isml ? v.toFixed(0) : v.toFixed(1);
-  document.getElementById('sum-total').textContent = fmt(conv(totalOz)) + ' ' + unitLabel();
-  document.getElementById('sum-sessions').textContent = done + '/' + sessionCount;
-  document.getElementById('sum-avg').textContent = logged > 0 ? fmt(conv(totalOz/logged)) + ' ' + unitLabel() : '—';
-  document.getElementById('sum-last').textContent = lastOz !== null ? fmt(conv(lastOz)) + ' ' + unitLabel() : '—';
-  document.querySelectorAll('.session-card').forEach(c => c.classList.remove('is-last'));
-  document.querySelectorAll('.last-badge').forEach(b => b.remove());
-  if (lastIdx >= 0) {
-    const card = document.getElementById('card-' + lastIdx);
-    if (card) { card.classList.add('is-last'); const b = document.createElement('span'); b.className='last-badge'; b.textContent='last'; card.querySelector('.s-inputs').appendChild(b); }
+  const done=day.sessions.slice(0,sessionCount).filter(s=>s.done).length;
+  const isml=unit==='ml',conv=v=>isml?ozToMl(v):v,fmt=v=>isml?v.toFixed(0):v.toFixed(1);
+  document.getElementById('sum-total').textContent=fmt(conv(totalOz))+' '+unitLabel();
+  document.getElementById('sum-sessions').textContent=done+'/'+sessionCount;
+  document.getElementById('sum-avg').textContent=logged>0?fmt(conv(totalOz/logged))+' '+unitLabel():'—';
+  document.getElementById('sum-last').textContent=lastOz!==null?fmt(conv(lastOz))+' '+unitLabel():'—';
+  document.querySelectorAll('.session-card').forEach(c=>c.classList.remove('is-last'));
+  document.querySelectorAll('.last-badge').forEach(b=>b.remove());
+  if(lastIdx>=0){
+    const card=document.getElementById('card-'+lastIdx);
+    if(card){card.classList.add('is-last');const b=document.createElement('span');b.className='last-badge';b.textContent='last';card.querySelector('.card-main').appendChild(b);}
   }
 }
 
-function updateSession(i, field, val, inp) {
-  const day = getDayData(dateKey(currentDate));
-  day.sessions[i][field] = field === 'oz' ? storeVal(val) : val;
-  persist(); updateSummary(day);
-  const badge = document.getElementById('badge-' + i); if (badge) flashSaved(badge, inp);
+function updateSession(i,field,val,inp){
+  const day=getDayData(dateKey(currentDate));
+  day.sessions[i][field]=field==='oz'?storeVal(val):val;
+  persist();updateSummary(day);
+  const card=document.getElementById('card-'+i);
+  if(card&&field==='oz'){const hasValue=day.sessions[i].oz!==''&&parseFloat(day.sessions[i].oz)>0;const isDone=!!day.sessions[i].done;card.classList.toggle('has-value',hasValue&&!isDone);}
+  const badge=document.getElementById('badge-'+i);if(badge)flashSaved(badge,inp);
 }
 
-function toggleDone(i) {
-  const day = getDayData(dateKey(currentDate));
-  day.sessions[i].done = !day.sessions[i].done; persist();
-  const card = document.getElementById('card-'+i), btn = card.querySelector('.dot-btn'), isDone = day.sessions[i].done;
-  btn.className = 'dot-btn' + (isDone ? ' done' : '');
-  card.className = 'session-card' + (isDone?' done':'') + (card.classList.contains('is-last')?' is-last':'');
+function toggleDone(i){
+  const day=getDayData(dateKey(currentDate));
+  day.sessions[i].done=!day.sessions[i].done;persist();
+  const card=document.getElementById('card-'+i),btn=card.querySelector('.dot-btn'),isDone=day.sessions[i].done;
+  const hasValue=day.sessions[i].oz!==''&&parseFloat(day.sessions[i].oz)>0;
+  btn.className='dot-btn'+(isDone?' done':'');
+  btn.classList.remove('pulse');void btn.offsetWidth;btn.classList.add('pulse');
+  setTimeout(()=>btn.classList.remove('pulse'),600);
+  card.className='session-card'+(isDone?' done':'')+(hasValue&&!isDone?' has-value':'')+(card.classList.contains('is-last')?' is-last':'');
   updateSummary(day);
 }
 
-function saveNote() { getDayData(dateKey(currentDate)).note = document.getElementById('day-note').value; persist(); }
-
-// ── Schedule editor with drag-to-reorder ────────────────────────────────────
-let dragSrc = null;
-
-function openEditor() {
-  const schedule = getSchedule();
-  const rows = document.getElementById('sch-rows');
-  rows.innerHTML = '';
-  schedule.forEach((ses, i) => addEditorRow(rows, i, ses.time));
-  document.getElementById('sch-err').classList.remove('visible');
-  document.getElementById('schedule-editor').style.display = 'block';
-  document.getElementById('write-schedule-btn').style.display = 'none';
+function saveNote(tab){
+  const key=dateKey(currentDate),day=getDayData(key);
+  const val=document.getElementById('note-'+tab).value;
+  if(tab==='today')day.note=val; else day.noteTmrw=val;
+  persist();
 }
 
-function addEditorRow(container, idx, timeVal) {
-  const row = document.createElement('div');
-  row.className = 'sch-row';
-  row.innerHTML = `
-    <div class="drag-handle" title="Hold to drag and reorder">
+// ── Schedule editor ───────────────────────────────────────────────────────────
+let dragSrc=null;
+function openEditor(){
+  const schedule=getSchedule(),rows=document.getElementById('sch-rows');
+  rows.innerHTML='';schedule.forEach((ses,i)=>addEditorRow(rows,i,ses.time));
+  document.getElementById('sch-err').classList.remove('visible');
+  document.getElementById('schedule-editor').style.display='block';
+  document.getElementById('write-schedule-btn').style.display='none';
+}
+function addEditorRow(container,idx,timeVal){
+  const row=document.createElement('div');row.className='sch-row';
+  row.innerHTML=`
+    <div class="drag-handle" title="Hold to drag">
       <svg width="16" height="16" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg">
-        <circle cx="5.5" cy="4"  r="1.3" fill="#aaa"/>
-        <circle cx="10.5" cy="4"  r="1.3" fill="#aaa"/>
-        <circle cx="5.5" cy="8"  r="1.3" fill="#aaa"/>
-        <circle cx="10.5" cy="8"  r="1.3" fill="#aaa"/>
-        <circle cx="5.5" cy="12" r="1.3" fill="#aaa"/>
-        <circle cx="10.5" cy="12" r="1.3" fill="#aaa"/>
+        <circle cx="5.5" cy="4" r="1.3" fill="#aaa"/><circle cx="10.5" cy="4" r="1.3" fill="#aaa"/>
+        <circle cx="5.5" cy="8" r="1.3" fill="#aaa"/><circle cx="10.5" cy="8" r="1.3" fill="#aaa"/>
+        <circle cx="5.5" cy="12" r="1.3" fill="#aaa"/><circle cx="10.5" cy="12" r="1.3" fill="#aaa"/>
       </svg>
     </div>
-    <span class="sch-row-num">${idx + 1}</span>
+    <span class="sch-row-num">${idx+1}</span>
     <input class="sch-time-input" type="text" value="${timeVal}" placeholder="e.g. 9:00 am"/>
     <span class="sch-hint">e.g. 9:00 am</span>`;
-
-  const handle = row.querySelector('.drag-handle');
-
-  // Mouse drag — only fires when dragging the handle
-  handle.addEventListener('mousedown', () => row.setAttribute('draggable', 'true'));
-  handle.addEventListener('mouseup',   () => row.setAttribute('draggable', 'false'));
-
-  row.addEventListener('dragstart', e => {
-    dragSrc = row; row.classList.add('dragging');
-    e.dataTransfer.effectAllowed = 'move';
-  });
-  row.addEventListener('dragend', () => {
-    row.setAttribute('draggable', 'false');
-    row.classList.remove('dragging');
-    document.querySelectorAll('.sch-row').forEach(r => r.classList.remove('drag-over'));
-  });
-  row.addEventListener('dragover', e => {
-    e.preventDefault();
-    if (row !== dragSrc) {
-      document.querySelectorAll('.sch-row').forEach(r => r.classList.remove('drag-over'));
-      row.classList.add('drag-over');
-    }
-  });
-  row.addEventListener('drop', e => {
-    e.preventDefault();
-    if (dragSrc && dragSrc !== row) reorderRows(dragSrc, row);
-  });
-
-  // Touch drag
-  let touchTarget = null;
-  handle.addEventListener('touchstart', e => {
-    dragSrc = row; row.classList.add('dragging');
-    e.preventDefault();
-  }, {passive: false});
-  handle.addEventListener('touchmove', e => {
-    e.preventDefault();
-    const touch = e.touches[0];
-    document.querySelectorAll('.sch-row').forEach(r => {
-      r.classList.remove('drag-over');
-      const rect = r.getBoundingClientRect();
-      if (touch.clientY >= rect.top && touch.clientY <= rect.bottom && r !== dragSrc) {
-        r.classList.add('drag-over'); touchTarget = r;
-      }
-    });
-  }, {passive: false});
-  handle.addEventListener('touchend', () => {
-    row.classList.remove('dragging');
-    if (touchTarget) { reorderRows(dragSrc, touchTarget); touchTarget = null; }
-    dragSrc = null;
-  });
-
+  const handle=row.querySelector('.drag-handle');
+  handle.addEventListener('mousedown',()=>row.setAttribute('draggable','true'));
+  handle.addEventListener('mouseup',()=>row.setAttribute('draggable','false'));
+  row.addEventListener('dragstart',e=>{dragSrc=row;row.classList.add('dragging');e.dataTransfer.effectAllowed='move';});
+  row.addEventListener('dragend',()=>{row.setAttribute('draggable','false');row.classList.remove('dragging');document.querySelectorAll('.sch-row').forEach(r=>r.classList.remove('drag-over'));});
+  row.addEventListener('dragover',e=>{e.preventDefault();if(row!==dragSrc){document.querySelectorAll('.sch-row').forEach(r=>r.classList.remove('drag-over'));row.classList.add('drag-over');}});
+  row.addEventListener('drop',e=>{e.preventDefault();if(dragSrc&&dragSrc!==row)reorderRows(dragSrc,row);});
+  let touchTarget=null;
+  handle.addEventListener('touchstart',e=>{dragSrc=row;row.classList.add('dragging');e.preventDefault();},{passive:false});
+  handle.addEventListener('touchmove',e=>{e.preventDefault();const t=e.touches[0];document.querySelectorAll('.sch-row').forEach(r=>{r.classList.remove('drag-over');const rect=r.getBoundingClientRect();if(t.clientY>=rect.top&&t.clientY<=rect.bottom&&r!==dragSrc){r.classList.add('drag-over');touchTarget=r;}});},{passive:false});
+  handle.addEventListener('touchend',()=>{row.classList.remove('dragging');if(touchTarget){reorderRows(dragSrc,touchTarget);touchTarget=null;}dragSrc=null;});
   container.appendChild(row);
 }
-
-function reorderRows(from, to) {
-  const container = document.getElementById('sch-rows');
-  const rows = [...container.querySelectorAll('.sch-row')];
-  const times = rows.map(r => r.querySelector('.sch-time-input').value);
-  const fi = rows.indexOf(from), ti = rows.indexOf(to);
-  [times[fi], times[ti]] = [times[ti], times[fi]];
-  container.innerHTML = '';
-  times.forEach((t, i) => addEditorRow(container, i, t));
+function reorderRows(from,to){
+  const container=document.getElementById('sch-rows');
+  const rows=[...container.querySelectorAll('.sch-row')];
+  const times=rows.map(r=>r.querySelector('.sch-time-input').value);
+  const fi=rows.indexOf(from),ti=rows.indexOf(to);
+  [times[fi],times[ti]]=[times[ti],times[fi]];
+  container.innerHTML='';times.forEach((t,i)=>addEditorRow(container,i,t));
 }
-
-function closeEditor() {
-  document.getElementById('schedule-editor').style.display = 'none';
-  document.getElementById('write-schedule-btn').style.display = 'flex';
-}
-
-function saveSchedule() {
-  const inputs = document.querySelectorAll('.sch-time-input');
-  let ok = true; const times = [];
-  inputs.forEach((inp, i) => {
-    const valid = parseTime(inp.value) !== null;
-    inp.classList.toggle('invalid', !valid);
-    if (!valid) ok = false;
-    else times.push({time: inp.value.trim().toLowerCase(), name: `Session ${i+1}`});
-  });
-  if (!ok) { document.getElementById('sch-err').classList.add('visible'); return; }
+function closeEditor(){document.getElementById('schedule-editor').style.display='none';document.getElementById('write-schedule-btn').style.display='flex';}
+function saveSchedule(){
+  const inputs=document.querySelectorAll('.sch-time-input');let ok=true;const times=[];
+  inputs.forEach((inp,i)=>{const valid=parseTime(inp.value)!==null;inp.classList.toggle('invalid',!valid);if(!valid)ok=false;else times.push({time:inp.value.trim().toLowerCase(),name:`Session ${i+1}`});});
+  if(!ok){document.getElementById('sch-err').classList.add('visible');return;}
   document.getElementById('sch-err').classList.remove('visible');
-  customSchedule = times; persist(); closeEditor(); renderLog();
+  customSchedule=times;persist();closeEditor();renderLog();
 }
-
-function resetSchedule() { customSchedule = null; persist(); closeEditor(); renderLog(); }
+function resetSchedule(){customSchedule=null;persist();closeEditor();renderLog();}
 
 // ── Tabs ──────────────────────────────────────────────────────────────────────
-function switchTab(t, el) {
-  document.querySelectorAll('.tab').forEach(b => b.classList.remove('active'));
-  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
-  el.classList.add('active'); document.getElementById('tab-'+t).classList.add('active');
-  if (t === 'charts') renderChart();
-  if (t === 'history') { renderHistory(); updateHistoryHeader(); }
+function switchTab(t,el){
+  document.querySelectorAll('.tab').forEach(b=>b.classList.remove('active'));
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+  el.classList.add('active');document.getElementById('tab-'+t).classList.add('active');
+  if(t==='charts')renderChart();
+  if(t==='history'){renderHistory();updateHistoryHeader();}
 }
-function setChartView(v, el) {
-  chartView = v;
-  document.querySelectorAll('.chart-btn').forEach(b => b.classList.remove('active'));
-  el.classList.add('active'); renderChart();
-}
+function setChartView(v,el){chartView=v;document.querySelectorAll('.chart-btn').forEach(b=>b.classList.remove('active'));el.classList.add('active');renderChart();}
 
 // ── Charts ────────────────────────────────────────────────────────────────────
-function getLast14Days() {
-  return Array.from({length:14}, (_, i) => {
-    const d = new Date(); d.setHours(0,0,0,0); d.setDate(d.getDate() - (13 - i)); return d;
-  });
-}
-
-function renderChart() {
-  if (typeof Chart === 'undefined') {
-    document.getElementById('chart-legend').innerHTML = '<span style="color:var(--text2);font-size:12px">Charts unavailable offline</span>';
-    return;
-  }
-  const days = getLast14Days();
-  const labels = days.map(d => d.toLocaleDateString('en-US', {month:'short', day:'numeric'}));
-  if (chartInst) { chartInst.destroy(); chartInst = null; }
-  const ctx = document.getElementById('mainChart').getContext('2d');
-  const yLbl = v => v + ' ' + unitLabel(), conv = oz => unit==='ml' ? ozToMl(oz) : oz;
-  if (chartView === 'daily') {
-    const totals = [], avgs = [];
-    days.forEach(d => {
-      const day = data[dateKey(d)];
-      if (!day) { totals.push(0); avgs.push(null); return; }
-      const sessions = day.sessions.slice(0, sessionCount);
-      const logged = sessions.filter(x => x.oz !== '');
-      const totalOz = logged.reduce((s,x) => s + (parseFloat(x.oz)||0), 0);
+function getLast14Days(){return Array.from({length:14},(_,i)=>{const d=new Date();d.setHours(0,0,0,0);d.setDate(d.getDate()-(13-i));return d;});}
+function renderChart(){
+  if(typeof Chart==='undefined'){document.getElementById('chart-legend').innerHTML='<span style="color:var(--text2);font-size:12px">Charts unavailable offline</span>';return;}
+  const days=getLast14Days();
+  const labels=days.map(d=>d.toLocaleDateString('en-US',{month:'short',day:'numeric'}));
+  if(chartInst){chartInst.destroy();chartInst=null;}
+  const ctx=document.getElementById('mainChart').getContext('2d');
+  const yLbl=v=>v+' '+unitLabel(),conv=oz=>unit==='ml'?ozToMl(oz):oz;
+  if(chartView==='daily'){
+    const totals=[],avgs=[];
+    days.forEach(d=>{
+      const day=data[dateKey(d)];
+      if(!day){totals.push(0);avgs.push(null);return;}
+      const sessions=day.sessions.slice(0,sessionCount);
+      const logged=sessions.filter(x=>x.oz!=='');
+      const totalOz=logged.reduce((s,x)=>s+(parseFloat(x.oz)||0),0);
       totals.push(parseFloat(conv(totalOz).toFixed(unit==='ml'?0:1)));
-      avgs.push(logged.length > 0 ? parseFloat(conv(totalOz / logged.length).toFixed(unit==='ml'?1:2)) : null);
+      avgs.push(logged.length>0?parseFloat(conv(totalOz/logged.length).toFixed(unit==='ml'?1:2)):null);
     });
-    chartInst = new Chart(ctx, {
-      type: 'bar',
-      data: {
-        labels,
-        datasets: [
-          {
-            type: 'bar',
-            label: 'Daily total',
-            data: totals,
-            backgroundColor: '#378ADD',
-            borderRadius: 4,
-            borderSkipped: false,
-            yAxisID: 'y',
-            order: 2,
-          },
-          {
-            type: 'line',
-            label: 'Avg per session',
-            data: avgs,
-            borderColor: '#F59E0B',
-            backgroundColor: 'rgba(245,158,11,0.12)',
-            pointBackgroundColor: '#F59E0B',
-            pointBorderColor: '#fff',
-            pointBorderWidth: 1.5,
-            pointRadius: 4,
-            pointHoverRadius: 6,
-            borderWidth: 2,
-            tension: 0.35,
-            fill: false,
-            spanGaps: true,
-            yAxisID: 'y',
-            order: 1,
-          }
-        ]
-      },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        interaction: { mode: 'index', intersect: false },
-        plugins: { legend: { display: false } },
-        scales: {
-          x: { grid: { display: false }, ticks: { font: { size: 10 }, maxRotation: 45, autoSkip: false } },
-          y: { beginAtZero: true, grid: { color: 'rgba(128,128,128,0.1)' }, ticks: { font: { size: 10 }, callback: yLbl } }
-        }
-      }
-    });
-    document.getElementById('chart-legend').innerHTML = `
-      <span style="display:flex;align-items:center;gap:4px"><span class="legend-dot" style="background:#378ADD"></span>Daily total (${unitLabel()})</span>
-      <span style="display:flex;align-items:center;gap:4px"><span class="legend-dot" style="background:#F59E0B;border-radius:50%"></span>Avg per session (${unitLabel()})</span>`;
+    chartInst=new Chart(ctx,{type:'bar',data:{labels,datasets:[
+      {type:'bar',label:'Daily total',data:totals,backgroundColor:'#378ADD',borderRadius:4,borderSkipped:false,yAxisID:'y',order:2},
+      {type:'line',label:'Avg per session',data:avgs,borderColor:'#F59E0B',backgroundColor:'rgba(245,158,11,0.1)',pointBackgroundColor:'#F59E0B',pointBorderColor:'#fff',pointBorderWidth:1.5,pointRadius:4,pointHoverRadius:6,borderWidth:2,tension:0.35,fill:false,spanGaps:true,yAxisID:'y',order:1}
+    ]},options:{responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},plugins:{legend:{display:false}},scales:{x:{grid:{display:false},ticks:{font:{size:10},maxRotation:45,autoSkip:false}},y:{beginAtZero:true,grid:{color:'rgba(128,128,128,0.1)'},ticks:{font:{size:10},callback:yLbl}}}}});
+    document.getElementById('chart-legend').innerHTML=`<span style="display:flex;align-items:center;gap:4px"><span class="legend-dot" style="background:#378ADD"></span>Daily total (${unitLabel()})</span><span style="display:flex;align-items:center;gap:4px"><span class="legend-dot" style="background:#F59E0B;border-radius:50%"></span>Avg per session (${unitLabel()})</span>`;
   } else {
-    const palette = ['#378ADD','#5B9BD5','#7EB3D0','#3D8BC4','#60A5C8','#2E73A8','#4A90D9','#6BA3C8','#85B7E0','#4A7FC1','#3A6BAF','#5590D4'];
-    const schedule = getSchedule();
-    const datasets = schedule.map((ses,i) => ({
-      label: ses.time,
-      data: days.map(d => { const day=data[dateKey(d)]; return day?parseFloat(conv(parseFloat(day.sessions[i]?.oz)||0).toFixed(unit==='ml'?0:1)):0; }),
-      backgroundColor: palette[i % palette.length]+'cc', stack:'a', borderRadius:2
-    }));
-    chartInst = new Chart(ctx, {type:'bar', data:{labels, datasets}, options:{responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}}, scales:{x:{stacked:true,grid:{display:false},ticks:{font:{size:10},maxRotation:45,autoSkip:false}}, y:{stacked:true,beginAtZero:true,grid:{color:'rgba(128,128,128,0.1)'},ticks:{font:{size:10},callback:yLbl}}}}});
-    document.getElementById('chart-legend').innerHTML = `<span style="display:flex;align-items:center;gap:4px"><span class="legend-dot" style="background:#378ADD"></span>Per session (stacked)</span>`;
+    const palette=['#378ADD','#5B9BD5','#7EB3D0','#3D8BC4','#60A5C8','#2E73A8','#4A90D9','#6BA3C8','#85B7E0','#4A7FC1','#3A6BAF','#5590D4'];
+    const schedule=getSchedule();
+    const datasets=schedule.map((ses,i)=>({label:ses.time,data:days.map(d=>{const day=data[dateKey(d)];return day?parseFloat(conv(parseFloat(day.sessions[i]?.oz)||0).toFixed(unit==='ml'?0:1)):0;}),backgroundColor:palette[i%palette.length]+'cc',stack:'a',borderRadius:2}));
+    chartInst=new Chart(ctx,{type:'bar',data:{labels,datasets},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{stacked:true,grid:{display:false},ticks:{font:{size:10},maxRotation:45,autoSkip:false}},y:{stacked:true,beginAtZero:true,grid:{color:'rgba(128,128,128,0.1)'},ticks:{font:{size:10},callback:yLbl}}}}});
+    document.getElementById('chart-legend').innerHTML=`<span style="display:flex;align-items:center;gap:4px"><span class="legend-dot" style="background:#378ADD"></span>Per session (stacked)</span>`;
   }
 }
 
 // ── History ───────────────────────────────────────────────────────────────────
-function renderHistory() {
-  const days = getLast14Days().reverse(), tbody = document.getElementById('history-body');
-  tbody.innerHTML = ''; let hasAny = false;
-  days.forEach(d => {
-    const key = dateKey(d), day = data[key]; if (!day) return;
-    const totalOz = day.sessions.slice(0,sessionCount).reduce((s,x)=>s+(parseFloat(x.oz)||0),0);
-    const done = day.sessions.slice(0,sessionCount).filter(x=>x.done).length;
-    if (done===0 && totalOz===0) return; hasAny = true;
-    const disp = unit==='ml' ? ozToMl(totalOz).toFixed(0) : totalOz.toFixed(1);
-    const tr = document.createElement('tr');
-    tr.innerHTML = `<td>${fmtDate(d)}</td><td>${disp}</td><td>${done}/${sessionCount}</td><td style="color:var(--text2);font-size:11px">${day.note||''}</td>`;
+function renderHistory(){
+  const days=getLast14Days().reverse(),tbody=document.getElementById('history-body');
+  tbody.innerHTML='';let hasAny=false;
+  days.forEach(d=>{
+    const key=dateKey(d),day=data[key];if(!day)return;
+    const totalOz=day.sessions.slice(0,sessionCount).reduce((s,x)=>s+(parseFloat(x.oz)||0),0);
+    const done=day.sessions.slice(0,sessionCount).filter(x=>x.done).length;
+    if(done===0&&totalOz===0)return;hasAny=true;
+    const disp=unit==='ml'?ozToMl(totalOz).toFixed(0):totalOz.toFixed(1);
+    const moodEmojis=(day.moods||[]).map(id=>MOOD_OPTIONS.find(m=>m.id===id)?.emoji||'').join('');
+    const tr=document.createElement('tr');
+    tr.innerHTML=`<td>${fmtDate(d)}</td><td>${disp}</td><td>${done}/${sessionCount}</td><td class="history-mood">${moodEmojis}</td><td style="color:var(--text2);font-size:11px">${day.note||''}</td>`;
     tbody.appendChild(tr);
   });
-  if (!hasAny) tbody.innerHTML = `<tr><td colspan="4" class="empty">No data yet — log your first session!</td></tr>`;
+  if(!hasAny)tbody.innerHTML=`<tr><td colspan="5" class="empty">No data yet — log your first session!</td></tr>`;
 }
 
 // ── Export / Import ───────────────────────────────────────────────────────────
-function exportData() {
-  const blob = new Blob([JSON.stringify({data,unit,sessionCount,customSchedule},null,2)], {type:'application/json'});
-  const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
-  a.download = 'dropwise_backup_' + dateKey(new Date()) + '.json'; a.click();
+function exportData(){
+  const blob=new Blob([JSON.stringify({data,unit,sessionCount,customSchedule,showSessionNotes},null,2)],{type:'application/json'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='dropwise_backup_'+dateKey(new Date())+'.json';a.click();
 }
-function importData(e) {
-  const file = e.target.files[0]; if (!file) return;
-  const reader = new FileReader();
-  reader.onload = ev => {
-    try {
-      const imp = JSON.parse(ev.target.result), impData = imp.data || imp;
-      if (imp.unit) unit = imp.unit;
-      if (imp.sessionCount) sessionCount = imp.sessionCount;
-      if (imp.customSchedule) customSchedule = imp.customSchedule;
-      let merged = 0, skipped = 0;
-      Object.keys(impData).forEach(key => {
-        if (typeof impData[key] !== 'object' || !impData[key].sessions) return;
-        if (!data[key]) { data[key] = impData[key]; merged++; return; }
-        impData[key].sessions.forEach((s,i) => {
-          const cur = data[key].sessions[i];
-          if (s.oz!==''&&cur.oz===''){cur.oz=s.oz;merged++;}
-          else if(s.oz!==''&&cur.oz!=='')skipped++;
-          if(s.min!==''&&cur.min==='')cur.min=s.min;
-          if(s.done&&!cur.done)cur.done=s.done;
+function importData(e){
+  const file=e.target.files[0];if(!file)return;
+  const reader=new FileReader();
+  reader.onload=ev=>{
+    try{
+      const imp=JSON.parse(ev.target.result),impData=imp.data||imp;
+      if(imp.unit)unit=imp.unit;if(imp.sessionCount)sessionCount=imp.sessionCount;
+      if(imp.customSchedule)customSchedule=imp.customSchedule;
+      if(imp.showSessionNotes!==undefined)showSessionNotes=imp.showSessionNotes;
+      let merged=0,skipped=0;
+      Object.keys(impData).forEach(key=>{
+        if(typeof impData[key]!=='object'||!impData[key].sessions)return;
+        if(!data[key]){data[key]=impData[key];merged++;return;}
+        impData[key].sessions.forEach((s,i)=>{
+          const cur=data[key].sessions[i];
+          if(s.oz!==''&&cur.oz===''){cur.oz=s.oz;merged++;}else if(s.oz!==''&&cur.oz!=='')skipped++;
+          if(s.min!==''&&cur.min==='')cur.min=s.min;if(s.done&&!cur.done)cur.done=s.done;
         });
         if(!data[key].note&&impData[key].note)data[key].note=impData[key].note;
       });
-      persist(); syncPrefsUI(); renderLog();
+      persist();syncPrefsUI();renderLog();
       alert(`Import complete.\n${merged} merged, ${skipped} conflict(s) kept existing.`);
-    } catch { alert('Could not read file.'); }
+    }catch{alert('Could not read file.');}
   };
   reader.readAsText(file);
 }
 
 // ── Init ──────────────────────────────────────────────────────────────────────
-loadData().then(() => {
+loadData().then(()=>{
   syncPrefsUI();
   renderLog();
   updateHistoryHeader();
 });
 </script>
-
-<!-- Chart.js loaded after init so a CDN failure doesn't block the app -->
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
 
