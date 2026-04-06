@@ -718,24 +718,122 @@ function syncPrefsUI() {
 function setUnit(u)         { unit = u; persist(); syncPrefsUI(); renderLog(); updateHistoryHeader(); }
 function setSessionCount(v) {
   const newCount = parseInt(v);
+
+  // Resize customSchedule without wiping edited times
   if (customSchedule) {
     if (customSchedule.length < newCount) {
-      // Extend with generated times — keep all existing edited times intact
       const even = buildEvenSchedule(newCount);
-      while (customSchedule.length < newCount) {
-        customSchedule.push(even[customSchedule.length]);
-      }
+      while (customSchedule.length < newCount) customSchedule.push(even[customSchedule.length]);
     } else if (customSchedule.length > newCount) {
-      // Trim from the end — only remove slots beyond the new count
       customSchedule = customSchedule.slice(0, newCount);
     }
-    // If lengths already match, touch nothing
   }
+
   sessionCount = newCount;
+
+  // For the current day: if it has data, reconcile cards smartly
+  const key = dateKey(currentDate);
+  if (data[key]) reconcileDayCards(data[key], newCount);
+
   persist(); syncPrefsUI(); renderLog();
+}
+
+// Reconcile a day's session slots when sessionCount changes.
+// Rules:
+//   1. Filled slots (oz entered) are always kept, never moved or deleted.
+//   2. Deleted slots stay deleted.
+//   3. The remaining empty slots are replaced with freshly generated times
+//      that spread evenly across the day's gaps to reach the target count,
+//      in chronological order.
+function reconcileDayCards(day, targetCount) {
+  const schedule = getSchedule();
+
+  // Collect filled slots (keep these exactly)
+  const filledSlots = [];
+  day.sessions.forEach((s, i) => {
+    if (!s.deleted && s.oz !== '' && parseFloat(s.oz) > 0) {
+      filledSlots.push({ idx: i, session: s, time: s.customTime || (schedule[i] && schedule[i].time) || minsToLabel(i * Math.floor(1440 / targetCount)) });
+    }
+  });
+
+  // How many empty slots do we need to fill the target?
+  const emptyNeeded = Math.max(0, targetCount - filledSlots.length);
+
+  if (emptyNeeded === 0) {
+    // We have enough or more filled slots — just mark empties as deleted
+    let activeCount = 0;
+    day.sessions.forEach((s, i) => {
+      if (s.deleted) return;
+      if (s.oz !== '' && parseFloat(s.oz) > 0) { activeCount++; return; }
+      if (activeCount >= targetCount) s.deleted = true;
+    });
+    return;
+  }
+
+  // Generate evenly spaced times for the empty slots
+  // Strategy: distribute across the full 24h, avoiding filled slot times
+  const filledMins = new Set(filledSlots.map(f => parseTime(f.time)).filter(m => m !== null));
+
+  // Build a pool of candidate times by generating a dense schedule and
+  // picking ones that don't collide with filled slots
+  const dense = buildEvenSchedule(Math.max(targetCount * 3, 24));
+  const candidates = dense
+    .map(s => ({ time: s.time, mins: parseTime(s.time) }))
+    .filter(c => c.mins !== null && !filledMins.has(c.mins))
+    .sort((a, b) => a.mins - b.mins);
+
+  // Pick evenly spread candidates from the pool
+  const step = Math.max(1, Math.floor(candidates.length / emptyNeeded));
+  const chosen = [];
+  for (let i = 0; i < candidates.length && chosen.length < emptyNeeded; i += step) {
+    chosen.push(candidates[i].time);
+  }
+  // If we still need more, grab from the end of candidates
+  while (chosen.length < emptyNeeded && chosen.length < candidates.length) {
+    chosen.push(candidates[candidates.length - 1 - (emptyNeeded - chosen.length)].time);
+  }
+
+  // Now rebuild: mark all current non-filled, non-deleted slots as deleted
+  day.sessions.forEach((s, i) => {
+    if (s.deleted) return;
+    if (s.oz !== '' && parseFloat(s.oz) > 0) return; // keep filled
+    s.deleted = true; // clear old empty slots
+  });
+
+  // Append fresh empty slots with smart times
+  chosen.forEach(time => {
+    // Find first deleted slot to reuse, or push a new one
+    const reuse = day.sessions.findIndex(s => s.deleted && !(s.oz !== '' && parseFloat(s.oz) > 0));
+    const slot = { oz:'', min:'', done:false, customName:'', sessionNote:'', customTime: time, deleted:false };
+    if (reuse >= 0) {
+      day.sessions[reuse] = slot;
+    } else {
+      day.sessions.push(slot);
+    }
+  });
+
+  // Sort all non-deleted sessions chronologically by their display time
+  const active = day.sessions.map((s, i) => ({ s, i })).filter(x => !x.s.deleted);
+  active.sort((a, b) => {
+    const ta = parseTime(a.s.customTime || (schedule[a.i] && schedule[a.i].time) || '12:00 am') ?? 0;
+    const tb = parseTime(b.s.customTime || (schedule[b.i] && schedule[b.i].time) || '12:00 am') ?? 0;
+    return ta - tb;
+  });
+
+  // Rebuild sessions array: active sessions in chronological order, then deleted at end
+  const deleted = day.sessions.filter(s => s.deleted);
+  active.forEach((item, newIdx) => { day.sessions[newIdx] = item.s; });
+  deleted.forEach((s, di) => { day.sessions[active.length + di] = s; });
 }
 function setSessionNotes(v) { showSessionNotes = v; persist(); renderLog(); }
 function updateHistoryHeader() { document.getElementById('history-unit-header').textContent = `Total (${unitLabel()})`; }
+
+// Returns a schedule entry for slot i, even when i is beyond the schedule length
+function slotLabel(schedule, i) {
+  if (schedule[i]) return schedule[i];
+  const base = buildEvenSchedule(Math.max(sessionCount, i + 1));
+  return base[i] || { time: minsToLabel(i * Math.floor(1440 / Math.max(sessionCount, 1))), name: `Session ${i+1}` };
+}
 
 // ── Day data ──────────────────────────────────────────────────────────────────
 function getDayData(key) {
@@ -757,23 +855,93 @@ function getDayData(key) {
 }
 
 // How many cards to show for a given day.
-// Days with any real data are frozen — sessionCount can only add cards, never remove.
-// Days with no data follow sessionCount exactly.
+// Counts only non-deleted touched slots; deleted slots never inflate the count.
 function getCardCountForDay(day) {
-  let highestTouched = -1;
+  let highestActive = -1;
   day.sessions.forEach((s, i) => {
     if (!s.deleted && (s.oz !== '' || s.min !== '' || s.done || s.customName || s.sessionNote || s.customTime))
-      highestTouched = i;
+      highestActive = i;
   });
-  if (highestTouched >= 0) return Math.max(highestTouched + 1, sessionCount);
+  if (highestActive >= 0) return Math.max(highestActive + 1, sessionCount);
   return sessionCount;
 }
 
-// Returns a label for a slot index — uses schedule time if available
-function slotLabel(schedule, i) {
-  if (schedule[i]) return schedule[i];
-  const baseSchedule = buildEvenSchedule(Math.max(sessionCount, i + 1));
-  return baseSchedule[i] || { time: '—', name: `Session ${i+1}` };
+// Reconcile a day's sessions when sessionCount changes and the day already has data.
+// Rules:
+//   1. Cards with volume filled are always preserved exactly — never moved or deleted.
+//   2. Previously deleted cards stay deleted and don't count toward the total.
+//   3. Empty cards are cleared and replaced with fresh ones whose times are spread
+//      evenly across the gaps between filled sessions (chronological order).
+function reconcileDayCards(day, targetCount) {
+  const schedule = buildEvenSchedule(Math.max(targetCount, 12));
+
+  // Collect filled sessions (have oz > 0) — these are sacred
+  const filled = [];
+  day.sessions.forEach((s, i) => {
+    if (!s.deleted && s.oz !== '' && parseFloat(s.oz) > 0) {
+      const timeStr = s.customTime || (schedule[i] && schedule[i].time) || minsToLabel(Math.round(i * 1440 / targetCount));
+      const mins = parseTime(timeStr) ?? (i * Math.floor(1440 / targetCount));
+      filled.push({ session: s, mins });
+    }
+  });
+
+  // Sort filled by time
+  filled.sort((a, b) => a.mins - b.mins);
+
+  const emptyNeeded = Math.max(0, targetCount - filled.length);
+
+  // Build evenly-spaced candidate times for the empty slots.
+  // Strategy: divide 24h into targetCount equal intervals, pick the midpoints
+  // of each interval, then remove any that are within 20 min of a filled slot.
+  const filledMins = filled.map(f => f.mins);
+  const interval = 1440 / targetCount;
+  const allCandidates = Array.from({ length: targetCount * 4 }, (_, i) => {
+    return roundToHalf((i * 1440 / (targetCount * 4)) % 1440);
+  }).filter((m, idx, arr) => arr.indexOf(m) === idx) // unique
+    .filter(m => !filledMins.some(fm => Math.abs(fm - m) < 20)) // not too close to filled
+    .sort((a, b) => a - b);
+
+  // Pick emptyNeeded evenly spaced from candidates
+  const chosen = [];
+  if (allCandidates.length > 0 && emptyNeeded > 0) {
+    const step = allCandidates.length / emptyNeeded;
+    for (let i = 0; i < emptyNeeded; i++) {
+      chosen.push(allCandidates[Math.min(Math.round(i * step), allCandidates.length - 1)]);
+    }
+  }
+
+  // Mark all current non-filled slots as deleted
+  day.sessions.forEach(s => {
+    if (s.deleted) return;
+    if (s.oz !== '' && parseFloat(s.oz) > 0) return; // keep filled
+    s.deleted = true;
+  });
+
+  // Add fresh empty slots for the chosen times
+  chosen.forEach(mins => {
+    const time = minsToLabel(mins);
+    // Reuse a deleted slot or push new
+    const reuseIdx = day.sessions.findIndex(s => s.deleted);
+    const newSlot = { oz:'', min:'', done:false, customName:'', sessionNote:'', customTime: time, deleted:false };
+    if (reuseIdx >= 0) day.sessions[reuseIdx] = newSlot;
+    else day.sessions.push(newSlot);
+  });
+
+  // Sort all active sessions chronologically
+  const active = [];
+  const deleted = [];
+  day.sessions.forEach(s => (s.deleted ? deleted : active).push(s));
+  active.sort((a, b) => {
+    const ta = parseTime(a.customTime || '12:00 am') ?? 0;
+    const tb = parseTime(b.customTime || '12:00 am') ?? 0;
+    return ta - tb;
+  });
+
+  // Rebuild sessions array: active first in time order, deleted after
+  active.forEach((s, i) => { day.sessions[i] = s; });
+  deleted.forEach((s, i) => { day.sessions[active.length + i] = s; });
+  // Trim excess
+  day.sessions.length = active.length + deleted.length;
 }
 
 function deleteCard(i) {
