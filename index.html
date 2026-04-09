@@ -5,6 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <title>Dropwise</title>
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;1,500&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<!-- Umami Analytics — replace YOUR_WEBSITE_ID with your actual Umami website ID -->
+<script defer src="https://cloud.umami.is/script.js" data-website-id="f4223d08-4dcb-4ca1-9faf-ec8b6950dd02"></script>
 <style>
 
 /* ── Reset ────────────────────────────────────────────────────────────────── */
@@ -403,6 +405,15 @@ header { margin-bottom: 16px; display: flex; align-items: flex-start; justify-co
 .watermark { text-align: center; margin-top: 32px; font-family: 'Playfair Display', Georgia, serif; font-style: italic; font-size: 13px; color: #9b9a96; }
 .watermark span { color: #E8960A; }
 
+/* ── Footer links ─────────────────────────────────────────────────────────── */
+.footer-links { display: flex; justify-content: center; gap: 16px; margin-top: 10px; font-size: 12px; }
+.footer-links a { color: #9b9a96; text-decoration: none; transition: color 0.15s; }
+.footer-links a:hover { color: #6b6a66; }
+@media (prefers-color-scheme: dark) {
+  .footer-links a { color: #5a5a5e; }
+  .footer-links a:hover { color: #98989e; }
+}
+
 </style>
 </head>
 <body>
@@ -414,12 +425,12 @@ header { margin-bottom: 16px; display: flex; align-items: flex-start; justify-co
     </div>
     <div class="header-controls">
       <div class="unit-toggle">
-        <button class="unit-btn active" id="unit-oz" onclick="setUnit('oz')">oz</button>
-        <button class="unit-btn" id="unit-ml" onclick="setUnit('ml')">ml</button>
+        <button class="unit-btn active" id="unit-oz" onclick="setUnit('oz')" data-umami-event="unit-oz">oz</button>
+        <button class="unit-btn" id="unit-ml" onclick="setUnit('ml')" data-umami-event="unit-ml">ml</button>
       </div>
       <div class="sessions-ctrl">
         <label for="sessions-select">Sessions/day</label>
-        <select id="sessions-select" onchange="setSessionCount(this.value)"></select>
+        <select id="sessions-select" onchange="setSessionCount(this.value); if(typeof umami!=='undefined') umami.track('sessions-per-day', {count: this.value})"></select>
       </div>
     </div>
   </header>
@@ -427,7 +438,7 @@ header { margin-bottom: 16px; display: flex; align-items: flex-start; justify-co
   <div class="snotes-strip">
     <span class="snotes-strip-text"><strong>Session notes</strong> — add a note to each pump</span>
     <label class="toggle">
-      <input type="checkbox" id="snotes-toggle" onchange="setSessionNotes(this.checked)"/>
+      <input type="checkbox" id="snotes-toggle" onchange="setSessionNotes(this.checked); if(typeof umami!=='undefined') umami.track('session-notes-toggle', {on: this.checked})"/>
       <div class="toggle-track"></div>
     </label>
   </div>
@@ -464,7 +475,7 @@ header { margin-bottom: 16px; display: flex; align-items: flex-start; justify-co
 
     <div class="session-list" id="session-list"></div>
 
-    <button class="write-schedule-btn" id="write-schedule-btn" onclick="openEditor()">
+    <button class="write-schedule-btn" id="write-schedule-btn" onclick="openEditor()" data-umami-event="open-schedule-editor">
       <svg width="11" height="11" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"><path d="M8.5 1.5a1.5 1.5 0 0 1 2 2L4 10H2v-2L8.5 1.5z"/></svg>
       Write your own schedule
     </button>
@@ -489,7 +500,7 @@ header { margin-bottom: 16px; display: flex; align-items: flex-start; justify-co
         <button class="note-tab-btn tmrw-tab" id="note-tab-tmrw" onclick="switchNoteTab('tmrw')">🌙 Tomorrow</button>
       </div>
       <div class="note-body active" id="note-body-today">
-        <textarea class="note-input" id="note-today" rows="2" placeholder="How did today go? Anything to remember…" oninput="saveNote('today')"></textarea>
+        <textarea class="note-input" id="note-today" rows="2" placeholder="How did today go? Anything to remember…" oninput="saveNote('today')" onchange="if(typeof umami!=='undefined') umami.track('note-today')"></textarea>
         <div class="mood-section">
           <div class="mood-label">How are you feeling?</div>
           <div class="mood-tags" id="mood-tags"></div>
@@ -498,7 +509,7 @@ header { margin-bottom: 16px; display: flex; align-items: flex-start; justify-co
       <div class="note-body" id="note-body-tmrw">
         <div class="tmrw-badge">🌙 Plan for tomorrow</div>
         <textarea class="note-input tmrw-input" id="note-tmrw" rows="2" placeholder="Leave yourself a note — try an earlier session, cluster feed after 5 pm…" style="margin-top:6px"></textarea>
-        <button class="tmrw-save-btn" onclick="saveTmrwNote()">Save plan</button>
+        <button class="tmrw-save-btn" onclick="saveTmrwNote()" data-umami-event="save-tomorrow-plan">Save plan</button>
         <div class="tmrw-saved-msg" id="tmrw-saved-msg">Saved ✓</div>
         <div class="note-hint">This will appear at the top of tomorrow's log as a reminder from you.</div>
       </div>
@@ -507,8 +518,8 @@ header { margin-bottom: 16px; display: flex; align-items: flex-start; justify-co
 
   <div id="tab-charts" class="panel">
     <div class="chart-toggle">
-      <button class="chart-btn active" onclick="setChartView('daily',this)">Daily total &amp; average</button>
-      <button class="chart-btn" onclick="setChartView('sessions',this)">By session</button>
+      <button class="chart-btn active" onclick="setChartView('daily',this)" data-umami-event="chart-daily">Daily total &amp; average</button>
+      <button class="chart-btn" onclick="setChartView('sessions',this)" data-umami-event="chart-by-session">By session</button>
     </div>
     <div class="chart-wrap"><canvas id="mainChart"></canvas></div>
     <div class="chart-legend" id="chart-legend"></div>
@@ -539,7 +550,7 @@ header { margin-bottom: 16px; display: flex; align-items: flex-start; justify-co
     <div class="settings-section">
       <h3>Export / Import data</h3>
       <div class="io-row">
-        <button class="io-btn" onclick="exportData()">⬇ Export JSON</button>
+        <button class="io-btn" onclick="exportData()" data-umami-event="export-data">⬇ Export JSON</button>
         <label class="io-btn" style="cursor:pointer;">⬆ Import JSON<input type="file" accept=".json" style="display:none" onchange="importData(event)"/></label>
       </div>
       <div class="io-note">
@@ -550,22 +561,22 @@ header { margin-bottom: 16px; display: flex; align-items: flex-start; justify-co
   </div>
 
   <div class="watermark">Drop<span>wise</span></div>
+  <div class="footer-links">
+    <a href="https://buymeacoffee.com/dropwise" target="_blank">☕ Buy me a coffee</a>
+    <a href="https://forms.gle/S7F666D8tdTbUr8V8" target="_blank">💬 Give feedback</a>
+  </div>
 </div>
 
 <script>
 // ── Storage ───────────────────────────────────────────────────────────────────
 const store = {
   async get(k) {
-    // Try window.storage first (Claude artifact viewer)
     try { if (window.storage) { const r = await window.storage.get(k); return r ? r.value : null; } } catch(e) {}
-    // Fall back to localStorage (GitHub Pages and all real browsers)
     try { return localStorage.getItem(k); } catch(e) {}
     return null;
   },
   async set(k, v) {
-    // Try window.storage first
     try { if (window.storage) { await window.storage.set(k, v); return; } } catch(e) {}
-    // Fall back to localStorage
     try { localStorage.setItem(k, v); } catch(e) {}
   }
 };
@@ -596,7 +607,6 @@ function minsToLabel(m) {
   return `${h12}:${String(min).padStart(2,'0')} ${h < 12 ? 'am' : 'pm'}`;
 }
 
-// Strict parser: "9:30 am" format only → minutes from midnight or null
 function parseTime(str) {
   const m = str.trim().match(/^(\d{1,2}):(\d{2})\s*(am|pm)$/i);
   if (!m) return null;
@@ -606,24 +616,18 @@ function parseTime(str) {
   return h * 60 + min;
 }
 
-// Smart parser: accepts "554" "930am" "1130" → "5:54 pm" etc.
-// Inherits am/pm from originalPeriod when user doesn't specify.
 function smartParseTime(raw, originalPeriod) {
   raw = raw.trim().toLowerCase();
-  if (parseTime(raw) !== null) return raw;             // already valid
-
+  if (parseTime(raw) !== null) return raw;
   let period = null;
   if (raw.endsWith('am')) { period = 'am'; raw = raw.slice(0,-2).trim(); }
   else if (raw.endsWith('pm')) { period = 'pm'; raw = raw.slice(0,-2).trim(); }
-
   raw = raw.replace(':', '').replace(/\s/g, '');
   if (!/^\d{1,4}$/.test(raw)) return null;
-
   let h, min;
   if      (raw.length <= 2) { h = parseInt(raw); min = 0; }
   else if (raw.length === 3) { h = parseInt(raw[0]); min = parseInt(raw.slice(1)); }
   else                       { h = parseInt(raw.slice(0,2)); min = parseInt(raw.slice(2)); }
-
   if (h < 1 || h > 12 || min < 0 || min > 59) return null;
   period = period || originalPeriod || 'am';
   return `${h}:${String(min).padStart(2,'0')} ${period}`;
@@ -714,8 +718,6 @@ function syncPrefsUI() {
 function setUnit(u)         { unit = u; persist(); syncPrefsUI(); renderLog(); updateHistoryHeader(); }
 function setSessionCount(v) {
   const newCount = parseInt(v);
-
-  // Resize customSchedule without wiping edited times
   if (customSchedule) {
     if (customSchedule.length < newCount) {
       const even = buildEvenSchedule(newCount);
@@ -724,39 +726,22 @@ function setSessionCount(v) {
       customSchedule = customSchedule.slice(0, newCount);
     }
   }
-
   sessionCount = newCount;
-
-  // For the current day: if it has data, reconcile cards smartly
   const key = dateKey(currentDate);
   if (data[key]) reconcileDayCards(data[key], newCount);
-
   persist(); syncPrefsUI(); renderLog();
 }
 
-// Reconcile a day's session slots when sessionCount changes.
-// Rules:
-//   1. Filled slots (oz entered) are always kept, never moved or deleted.
-//   2. Deleted slots stay deleted.
-//   3. The remaining empty slots are replaced with freshly generated times
-//      that spread evenly across the day's gaps to reach the target count,
-//      in chronological order.
 function reconcileDayCards(day, targetCount) {
   const schedule = getSchedule();
-
-  // Collect filled slots (keep these exactly)
   const filledSlots = [];
   day.sessions.forEach((s, i) => {
     if (!s.deleted && s.oz !== '' && parseFloat(s.oz) > 0) {
       filledSlots.push({ idx: i, session: s, time: s.customTime || (schedule[i] && schedule[i].time) || minsToLabel(i * Math.floor(1440 / targetCount)) });
     }
   });
-
-  // How many empty slots do we need to fill the target?
   const emptyNeeded = Math.max(0, targetCount - filledSlots.length);
-
   if (emptyNeeded === 0) {
-    // We have enough or more filled slots — just mark empties as deleted
     let activeCount = 0;
     day.sessions.forEach((s, i) => {
       if (s.deleted) return;
@@ -765,66 +750,44 @@ function reconcileDayCards(day, targetCount) {
     });
     return;
   }
-
-  // Generate evenly spaced times for the empty slots
-  // Strategy: distribute across the full 24h, avoiding filled slot times
   const filledMins = new Set(filledSlots.map(f => parseTime(f.time)).filter(m => m !== null));
-
-  // Build a pool of candidate times by generating a dense schedule and
-  // picking ones that don't collide with filled slots
   const dense = buildEvenSchedule(Math.max(targetCount * 3, 24));
   const candidates = dense
     .map(s => ({ time: s.time, mins: parseTime(s.time) }))
     .filter(c => c.mins !== null && !filledMins.has(c.mins))
     .sort((a, b) => a.mins - b.mins);
-
-  // Pick evenly spread candidates from the pool
   const step = Math.max(1, Math.floor(candidates.length / emptyNeeded));
   const chosen = [];
   for (let i = 0; i < candidates.length && chosen.length < emptyNeeded; i += step) {
     chosen.push(candidates[i].time);
   }
-  // If we still need more, grab from the end of candidates
   while (chosen.length < emptyNeeded && chosen.length < candidates.length) {
     chosen.push(candidates[candidates.length - 1 - (emptyNeeded - chosen.length)].time);
   }
-
-  // Now rebuild: mark all current non-filled, non-deleted slots as deleted
   day.sessions.forEach((s, i) => {
     if (s.deleted) return;
-    if (s.oz !== '' && parseFloat(s.oz) > 0) return; // keep filled
-    s.deleted = true; // clear old empty slots
+    if (s.oz !== '' && parseFloat(s.oz) > 0) return;
+    s.deleted = true;
   });
-
-  // Append fresh empty slots with smart times
   chosen.forEach(time => {
-    // Find first deleted slot to reuse, or push a new one
     const reuse = day.sessions.findIndex(s => s.deleted && !(s.oz !== '' && parseFloat(s.oz) > 0));
     const slot = { oz:'', min:'', done:false, customName:'', sessionNote:'', customTime: time, deleted:false };
-    if (reuse >= 0) {
-      day.sessions[reuse] = slot;
-    } else {
-      day.sessions.push(slot);
-    }
+    if (reuse >= 0) { day.sessions[reuse] = slot; } else { day.sessions.push(slot); }
   });
-
-  // Sort all non-deleted sessions chronologically by their display time
   const active = day.sessions.map((s, i) => ({ s, i })).filter(x => !x.s.deleted);
   active.sort((a, b) => {
     const ta = parseTime(a.s.customTime || (schedule[a.i] && schedule[a.i].time) || '12:00 am') ?? 0;
     const tb = parseTime(b.s.customTime || (schedule[b.i] && schedule[b.i].time) || '12:00 am') ?? 0;
     return ta - tb;
   });
-
-  // Rebuild sessions array: active sessions in chronological order, then deleted at end
   const deleted = day.sessions.filter(s => s.deleted);
   active.forEach((item, newIdx) => { day.sessions[newIdx] = item.s; });
   deleted.forEach((s, di) => { day.sessions[active.length + di] = s; });
 }
+
 function setSessionNotes(v) { showSessionNotes = v; persist(); renderLog(); }
 function updateHistoryHeader() { document.getElementById('history-unit-header').textContent = `Total (${unitLabel()})`; }
 
-// Returns a schedule entry for slot i, even when i is beyond the schedule length
 function slotLabel(schedule, i) {
   if (schedule[i]) return schedule[i];
   const base = buildEvenSchedule(Math.max(sessionCount, i + 1));
@@ -850,8 +813,6 @@ function getDayData(key) {
   return data[key];
 }
 
-// How many cards to show for a given day.
-// Counts only non-deleted touched slots; deleted slots never inflate the count.
 function getCardCountForDay(day) {
   let highestActive = -1;
   day.sessions.forEach((s, i) => {
@@ -860,84 +821,6 @@ function getCardCountForDay(day) {
   });
   if (highestActive >= 0) return Math.max(highestActive + 1, sessionCount);
   return sessionCount;
-}
-
-// Reconcile a day's sessions when sessionCount changes and the day already has data.
-// Rules:
-//   1. Cards with volume filled are always preserved exactly — never moved or deleted.
-//   2. Previously deleted cards stay deleted and don't count toward the total.
-//   3. Empty cards are cleared and replaced with fresh ones whose times are spread
-//      evenly across the gaps between filled sessions (chronological order).
-function reconcileDayCards(day, targetCount) {
-  const schedule = buildEvenSchedule(Math.max(targetCount, 12));
-
-  // Collect filled sessions (have oz > 0) — these are sacred
-  const filled = [];
-  day.sessions.forEach((s, i) => {
-    if (!s.deleted && s.oz !== '' && parseFloat(s.oz) > 0) {
-      const timeStr = s.customTime || (schedule[i] && schedule[i].time) || minsToLabel(Math.round(i * 1440 / targetCount));
-      const mins = parseTime(timeStr) ?? (i * Math.floor(1440 / targetCount));
-      filled.push({ session: s, mins });
-    }
-  });
-
-  // Sort filled by time
-  filled.sort((a, b) => a.mins - b.mins);
-
-  const emptyNeeded = Math.max(0, targetCount - filled.length);
-
-  // Build evenly-spaced candidate times for the empty slots.
-  // Strategy: divide 24h into targetCount equal intervals, pick the midpoints
-  // of each interval, then remove any that are within 20 min of a filled slot.
-  const filledMins = filled.map(f => f.mins);
-  const interval = 1440 / targetCount;
-  const allCandidates = Array.from({ length: targetCount * 4 }, (_, i) => {
-    return roundToHalf((i * 1440 / (targetCount * 4)) % 1440);
-  }).filter((m, idx, arr) => arr.indexOf(m) === idx) // unique
-    .filter(m => !filledMins.some(fm => Math.abs(fm - m) < 20)) // not too close to filled
-    .sort((a, b) => a - b);
-
-  // Pick emptyNeeded evenly spaced from candidates
-  const chosen = [];
-  if (allCandidates.length > 0 && emptyNeeded > 0) {
-    const step = allCandidates.length / emptyNeeded;
-    for (let i = 0; i < emptyNeeded; i++) {
-      chosen.push(allCandidates[Math.min(Math.round(i * step), allCandidates.length - 1)]);
-    }
-  }
-
-  // Mark all current non-filled slots as deleted
-  day.sessions.forEach(s => {
-    if (s.deleted) return;
-    if (s.oz !== '' && parseFloat(s.oz) > 0) return; // keep filled
-    s.deleted = true;
-  });
-
-  // Add fresh empty slots for the chosen times
-  chosen.forEach(mins => {
-    const time = minsToLabel(mins);
-    // Reuse a deleted slot or push new
-    const reuseIdx = day.sessions.findIndex(s => s.deleted);
-    const newSlot = { oz:'', min:'', done:false, customName:'', sessionNote:'', customTime: time, deleted:false };
-    if (reuseIdx >= 0) day.sessions[reuseIdx] = newSlot;
-    else day.sessions.push(newSlot);
-  });
-
-  // Sort all active sessions chronologically
-  const active = [];
-  const deleted = [];
-  day.sessions.forEach(s => (s.deleted ? deleted : active).push(s));
-  active.sort((a, b) => {
-    const ta = parseTime(a.customTime || '12:00 am') ?? 0;
-    const tb = parseTime(b.customTime || '12:00 am') ?? 0;
-    return ta - tb;
-  });
-
-  // Rebuild sessions array: active first in time order, deleted after
-  active.forEach((s, i) => { day.sessions[i] = s; });
-  deleted.forEach((s, i) => { day.sessions[active.length + i] = s; });
-  // Trim excess
-  day.sessions.length = active.length + deleted.length;
 }
 
 function deleteCard(i) {
@@ -1030,16 +913,12 @@ function renderLog() {
     document.getElementById('note-tmrw').value  = day.noteTmrw || '';
     renderPlanBanner();
     renderMoodTags();
-
     const schedule  = getSchedule();
     const cardCount = getCardCountForDay(day);
     const list      = document.getElementById('session-list');
     list.innerHTML  = '';
-
-    // Build visible slot indices (skip deleted or missing)
     let visibleIdx = 0;
     for (let i = 0; i < cardCount; i++) {
-      // Ensure slot exists
       while (day.sessions.length <= i) day.sessions.push({ oz:'', min:'', done:false, customName:'', sessionNote:'', customTime:'', deleted:false });
       if (day.sessions[i].deleted) continue;
       const ses     = schedule[i] || slotLabel(schedule, i);
@@ -1069,26 +948,21 @@ function buildSessionCard(list, i, ses, day, isExtra, visibleIdx) {
     + (isExtra ? ' extra-card' : '');
   card.id = 'card-' + i;
 
-  // Build card-main entirely with createElement — no innerHTML, no text node risk
   const main = document.createElement('div');
   main.className = 'card-main';
 
-  // Grip
   const grip = document.createElement('div');
   grip.className = 'card-grip'; grip.title = 'Hold to reorder';
   grip.innerHTML = '<svg width="14" height="14" viewBox="0 0 14 14" xmlns="http://www.w3.org/2000/svg"><circle cx="4.5" cy="3.5" r="1.2" fill="#888"/><circle cx="9.5" cy="3.5" r="1.2" fill="#888"/><circle cx="4.5" cy="7" r="1.2" fill="#888"/><circle cx="9.5" cy="7" r="1.2" fill="#888"/><circle cx="4.5" cy="10.5" r="1.2" fill="#888"/><circle cx="9.5" cy="10.5" r="1.2" fill="#888"/></svg>';
 
-  // Number chip
   const num = document.createElement('div');
   num.className = 's-num'; num.textContent = visibleIdx + 1;
 
-  // Done dot
   const dot = document.createElement('button');
   dot.className = 'dot-btn' + (isDone ? ' done' : '');
   dot.id = 'dot-' + i;
   dot.onclick = () => toggleDone(i);
 
-  // Session info
   const info = document.createElement('div');
   info.className = 's-info';
 
@@ -1111,7 +985,6 @@ function buildSessionCard(list, i, ses, day, isExtra, visibleIdx) {
 
   info.appendChild(timeEl); info.appendChild(nameEl);
 
-  // Inputs
   const inputs = document.createElement('div');
   inputs.className = 's-inputs';
 
@@ -1121,6 +994,8 @@ function buildSessionCard(list, i, ses, day, isExtra, visibleIdx) {
   ozInp.step = unit === 'ml' ? '1' : '0.1'; ozInp.placeholder = '0';
   ozInp.value = displayVal(s.oz);
   ozInp.oninput = function() { updateSession(i, 'oz', this.value, this); };
+  // ── Umami: track oz entry on blur (not every keystroke) ──
+  ozInp.addEventListener('change', function() { if (typeof umami !== 'undefined') umami.track('log-oz', {session: i + 1}); });
   const ozLbl = document.createElement('span'); ozLbl.className = 'field-lbl'; ozLbl.textContent = unitLabel();
   ozField.appendChild(ozInp); ozField.appendChild(ozLbl);
 
@@ -1134,13 +1009,11 @@ function buildSessionCard(list, i, ses, day, isExtra, visibleIdx) {
 
   inputs.appendChild(ozField); inputs.appendChild(minField);
 
-  // Delete button
   const delBtn = document.createElement('button');
   delBtn.className = 'card-delete-btn'; delBtn.title = 'Remove this session';
   delBtn.onclick = () => deleteCard(i);
   delBtn.innerHTML = '<svg width="13" height="13" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><line x1="2" y1="2" x2="12" y2="12"/><line x1="12" y1="2" x2="2" y2="12"/></svg>';
 
-  // Saved badge
   const badge = document.createElement('span');
   badge.className = 'saved-badge'; badge.id = 'badge-' + i; badge.dataset.idx = i;
 
@@ -1300,12 +1173,10 @@ function editSessionTime(i) {
     if (!raw) { restoreTimeEl(i, current, !!day.sessions[i].customTime); return; }
     const resolved = smartParseTime(raw, originalPeriod);
     const val      = resolved || current;
-    const changed  = val !== (schedule[i].time); // changed from the default
-    // Save per-day only — never touches customSchedule or other days
+    const changed  = val !== (schedule[i].time);
     day.sessions[i].customTime = changed ? val : '';
     persist();
     restoreTimeEl(i, val, changed);
-    // Update auto-label if name isn't custom
     if (!day.sessions[i].customName) {
       const nameEl = document.getElementById('sname-' + i);
       if (nameEl) nameEl.textContent = contextLabel(val);
