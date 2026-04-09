@@ -14,13 +14,10 @@
 button  { -webkit-appearance: none; appearance: none; color: inherit; background: none; border: none; font-family: inherit; cursor: pointer; }
 input, textarea, select { -webkit-appearance: none; appearance: none; font-family: inherit; }
 
-/* ── Design tokens — light ─────────────────────────────────────────────────
-   All colours are hardcoded. var() is only used for border-radius constants
-   which never affect visibility, so Chrome var() resolution doesn't matter.  */
+/* ── Design tokens — light ─────────────────────────────────────────────────*/
 :root {
-  --r: 10px;   /* card radius   */
-  --rs: 7px;   /* small radius  */
-  /* Palette (used in JS strings and chart colours only) */
+  --r: 10px;
+  --rs: 7px;
   --blue:   #378ADD;
   --green:  #1D9E75;
   --amber:  #E8960A;
@@ -40,11 +37,17 @@ header { margin-bottom: 16px; display: flex; align-items: flex-start; justify-co
 
 .header-text h1 { font-family: 'Playfair Display', Georgia, serif; font-size: 26px; font-weight: 500; letter-spacing: -0.2px; color: #1a1a1a; }
 .header-text h1 span { color: #E8960A; font-style: italic; font-family: 'Playfair Display', Georgia, serif; }
-.header-text p  { font-size: 12px; color: #6b6a66; margin-top: 2px; }
+
+/* Header eyebrow chip + tagline */
+.header-eyebrow { display: inline-flex; align-items: center; gap: 5px; background: rgba(29,158,117,0.1); border-radius: 99px; padding: 2px 8px 2px 5px; margin-bottom: 5px; }
+.header-eyebrow span.chip-text { font-size: 10px; font-weight: 600; color: #0F6E56; letter-spacing: 0.3px; }
+.header-tagline { font-size: 11.5px; color: #6b6a66; margin-top: 1px; }
 
 @media (prefers-color-scheme: dark) {
-  .header-text h1 { color: #f5f5f5; }
-  .header-text p  { color: #98989e; }
+  .header-text h1   { color: #f5f5f5; }
+  .header-eyebrow   { background: rgba(29,158,117,0.15); }
+  .header-eyebrow span.chip-text { color: #5DCAA5; }
+  .header-tagline   { color: #98989e; }
 }
 
 .header-controls { display: flex; flex-direction: column; gap: 6px; align-items: flex-end; flex-shrink: 0; }
@@ -69,6 +72,21 @@ header { margin-bottom: 16px; display: flex; align-items: flex-start; justify-co
   .sessions-ctrl        { background: #2c2c2e; border-color: rgba(255,255,255,0.14); }
   .sessions-ctrl label  { color: #98989e; }
   .sessions-ctrl select { color: #f5f5f5; }
+}
+
+/* ── Welcome card (Change 2) ──────────────────────────────────────────────── */
+.welcome-card { display: flex; align-items: flex-start; gap: 10px; background: rgba(29,158,117,0.07); border: 0.5px solid rgba(29,158,117,0.3); border-radius: var(--r); padding: 12px 14px; margin-bottom: 16px; animation: fadeIn 0.4s ease; }
+.welcome-icon { font-size: 22px; flex-shrink: 0; margin-top: 1px; }
+.welcome-body { flex: 1; }
+.welcome-body strong { font-size: 13px; font-weight: 600; color: #1a1a1a; display: block; margin-bottom: 3px; }
+.welcome-body p  { font-size: 12px; color: #6b6a66; line-height: 1.55; margin: 0; }
+.welcome-dismiss { font-size: 11px; color: #9b9a96; cursor: pointer; margin-top: 6px; display: inline-block; }
+.welcome-dismiss:hover { color: #6b6a66; }
+
+@media (prefers-color-scheme: dark) {
+  .welcome-card        { background: rgba(29,158,117,0.09); border-color: rgba(29,158,117,0.35); }
+  .welcome-body strong { color: #f5f5f5; }
+  .welcome-body p      { color: #98989e; }
 }
 
 /* ── Session notes strip ──────────────────────────────────────────────────── */
@@ -390,6 +408,9 @@ header { margin-bottom: 16px; display: flex; align-items: flex-start; justify-co
 .io-btn:hover { background: #f3f2ee; }
 .io-note { font-size: 11px; color: #9b9a96; margin-top: 8px; line-height: 1.6; }
 
+/* Change 5: About blurb */
+.about-blurb { margin-top: 12px; padding-top: 12px; border-top: 0.5px solid rgba(0,0,0,0.08); font-size: 11px; color: #9b9a96; line-height: 1.65; font-style: italic; }
+
 @media (prefers-color-scheme: dark) {
   .settings-section    { background: #1c1c1e; border-color: rgba(255,255,255,0.10); }
   .settings-section h3 { color: #f5f5f5; }
@@ -398,6 +419,34 @@ header { margin-bottom: 16px; display: flex; align-items: flex-start; justify-co
   .io-btn              { background: #1c1c1e; color: #f5f5f5; border-color: rgba(255,255,255,0.14); }
   .io-btn:hover        { background: #2c2c2e; }
   .io-note             { color: #5a5a5e; }
+  .about-blurb         { border-top-color: rgba(255,255,255,0.08); color: #5a5a5e; }
+}
+
+/* ── Milestone toast (Change 4) ───────────────────────────────────────────── */
+.milestone-toast {
+  position: fixed;
+  bottom: 28px;
+  left: 50%;
+  transform: translateX(-50%) translateY(80px);
+  background: #1a1a1a;
+  color: #ffffff;
+  font-size: 13px;
+  font-weight: 500;
+  padding: 10px 20px;
+  border-radius: 99px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.22);
+  white-space: nowrap;
+  z-index: 9999;
+  opacity: 0;
+  transition: opacity 0.3s ease, transform 0.45s cubic-bezier(0.34,1.56,0.64,1);
+  pointer-events: none;
+}
+.milestone-toast.show {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+@media (prefers-color-scheme: dark) {
+  .milestone-toast { background: #f5f5f5; color: #141414; }
 }
 
 /* ── Misc ─────────────────────────────────────────────────────────────────── */
@@ -417,11 +466,16 @@ header { margin-bottom: 16px; display: flex; align-items: flex-start; justify-co
 </style>
 </head>
 <body>
+
+<!-- Change 4: Milestone toast element -->
+<div class="milestone-toast" id="milestone-toast"></div>
+
 <div class="app">
   <header>
     <div class="header-text">
       <h1>Drop<span>wise</span></h1>
-      <p>Every drop, tracked wisely</p>
+      <div class="header-eyebrow"><span>🤱</span><span class="chip-text">BY A MOM, FOR A MOM</span></div>
+      <p class="header-tagline">Your liquid gold, tracked wisely.</p>
     </div>
     <div class="header-controls">
       <div class="unit-toggle">
@@ -434,6 +488,16 @@ header { margin-bottom: 16px; display: flex; align-items: flex-start; justify-co
       </div>
     </div>
   </header>
+
+  <!-- Change 2: Welcome card (shown/hidden via JS) -->
+  <div class="welcome-card" id="welcome-card" style="display:none">
+    <div class="welcome-icon">🤱</div>
+    <div class="welcome-body">
+      <strong>Welcome to Dropwise</strong>
+      <p>Log each pump or nursing session, track your daily totals, and leave yourself notes for tomorrow. Your data stays on your device — always private, always yours.</p>
+      <span class="welcome-dismiss" onclick="dismissWelcome()">Got it, let's go →</span>
+    </div>
+  </div>
 
   <div class="snotes-strip">
     <span class="snotes-strip-text"><strong>Session notes</strong> — add a note to each pump</span>
@@ -557,6 +621,8 @@ header { margin-bottom: 16px; display: flex; align-items: flex-start; justify-co
         <strong>Phone → desktop sync:</strong> Export on phone → AirDrop/email to desktop → Import there.<br><br>
         Data persists in browser storage until you clear it.
       </div>
+      <!-- Change 5: About blurb -->
+      <div class="about-blurb">Dropwise was built by a mom during her supply boost period — by a mom, for moms. Your data stays on your device, always.</div>
     </div>
   </div>
 
@@ -582,14 +648,21 @@ const store = {
 };
 
 // ── Constants ─────────────────────────────────────────────────────────────────
+// Change 7: Extended mood options with 3 new tags
 const MOOD_OPTIONS = [
-  { id:'tired',   emoji:'😴', label:'Tired'         },
-  { id:'low',     emoji:'💧', label:'Low supply'    },
-  { id:'good',    emoji:'💪', label:'Good day'      },
-  { id:'unwell',  emoji:'🤒', label:'Unwell'        },
-  { id:'relaxed', emoji:'😌', label:'Relaxed'       },
-  { id:'baby',    emoji:'🍼', label:'Baby fed well' },
+  { id:'tired',       emoji:'😴', label:'Tired'         },
+  { id:'low',         emoji:'💧', label:'Low supply'    },
+  { id:'good',        emoji:'💪', label:'Good day'      },
+  { id:'unwell',      emoji:'🤒', label:'Unwell'        },
+  { id:'relaxed',     emoji:'😌', label:'Relaxed'       },
+  { id:'baby',        emoji:'🍼', label:'Baby fed well' },
+  { id:'cluster',     emoji:'🤱', label:'Cluster fed'   },
+  { id:'supplements', emoji:'💊', label:'Took supplements' },
+  { id:'skintoskin',  emoji:'🧘', label:'Skin-to-skin'  },
 ];
+
+// Change 4: Milestone threshold (oz stored internally as oz)
+const MILESTONE_OZ = 15;
 
 // ── Schedule helpers ──────────────────────────────────────────────────────────
 function roundToHalf(m) { return Math.round(m / 30) * 30; }
@@ -636,16 +709,16 @@ function smartParseTime(raw, originalPeriod) {
 function contextLabel(timeStr) {
   const m = parseTime(timeStr);
   if (m === null) return '';
-  if (m < 90)   return 'Late night';
-  if (m < 270)  return 'Overnight';
-  if (m < 390)  return 'Early morning';
-  if (m < 510)  return 'Morning';
-  if (m < 660)  return 'Mid-morning';
-  if (m < 780)  return 'Midday';
-  if (m < 960)  return 'Afternoon';
-  if (m < 1110) return 'Late afternoon';
-  if (m < 1260) return 'Evening';
-  return 'Before bed';
+  if (m < 90)   return '🌙 Late night session';
+  if (m < 270)  return '🌙 Overnight warrior';
+  if (m < 390)  return '🌅 Early morning pump';
+  if (m < 510)  return '☀️ Morning session';
+  if (m < 660)  return '☀️ Mid-morning pump';
+  if (m < 780)  return '🌤️ Midday session';
+  if (m < 960)  return '🌤️ Afternoon pump';
+  if (m < 1110) return '🌇 Late afternoon session';
+  if (m < 1260) return '🌆 Evening pump';
+  return '🌙 Before bed session';
 }
 
 // ── State ─────────────────────────────────────────────────────────────────────
@@ -653,6 +726,7 @@ let currentDate = new Date(); currentDate.setHours(0,0,0,0);
 let data = {}, chartView = 'daily', chartInst = null;
 let unit = 'oz', sessionCount = 8, customSchedule = null;
 let showSessionNotes = true, planBannerDismissed = false;
+let milestoneShownToday = false;
 const saveTimers = {};
 
 function getSchedule() {
@@ -832,6 +906,7 @@ function deleteCard(i) {
 function changeDay(d) {
   currentDate = new Date(currentDate.getTime() + d * 86400000);
   planBannerDismissed = false;
+  milestoneShownToday = false;
   renderLog();
 }
 
@@ -840,6 +915,49 @@ function flashSaved(badge, inp) {
   badge.textContent = 'saved ✓'; badge.classList.add('visible');
   clearTimeout(saveTimers[badge.dataset.idx]);
   saveTimers[badge.dataset.idx] = setTimeout(() => badge.classList.remove('visible'), 1600);
+}
+
+// ── Milestone toast (Change 4) ────────────────────────────────────────────────
+function checkMilestone(day) {
+  const today = new Date(); today.setHours(0,0,0,0);
+  if (currentDate.getTime() !== today.getTime()) return; // only for today
+  if (milestoneShownToday) return;
+  const cardCount = getCardCountForDay(day);
+  let totalOz = 0;
+  for (let i = 0; i < cardCount; i++) {
+    const s = day.sessions[i];
+    if (!s || s.deleted) continue;
+    if (s.oz !== '') totalOz += parseFloat(s.oz) || 0;
+  }
+  if (totalOz >= MILESTONE_OZ) {
+    milestoneShownToday = true;
+    const disp = unit === 'ml'
+      ? ozToMl(totalOz).toFixed(0) + ' ml'
+      : totalOz.toFixed(1) + ' oz';
+    showMilestoneToast(`🎉 ${disp} today — your body is incredible.`);
+  }
+}
+
+function showMilestoneToast(msg) {
+  const toast = document.getElementById('milestone-toast');
+  toast.textContent = msg;
+  toast.classList.add('show');
+  setTimeout(() => toast.classList.remove('show'), 4000);
+}
+
+// ── Welcome card (Change 2) ───────────────────────────────────────────────────
+async function initWelcomeCard() {
+  try {
+    const seen = await store.get('dropwise_welcome_seen');
+    if (!seen) {
+      document.getElementById('welcome-card').style.display = 'flex';
+    }
+  } catch(e) {}
+}
+
+async function dismissWelcome() {
+  document.getElementById('welcome-card').style.display = 'none';
+  await store.set('dropwise_welcome_seen', '1');
 }
 
 // ── Plan banner ───────────────────────────────────────────────────────────────
@@ -994,7 +1112,6 @@ function buildSessionCard(list, i, ses, day, isExtra, visibleIdx) {
   ozInp.step = unit === 'ml' ? '1' : '0.1'; ozInp.placeholder = '0';
   ozInp.value = displayVal(s.oz);
   ozInp.oninput = function() { updateSession(i, 'oz', this.value, this); };
-  // ── Umami: track oz entry on blur (not every keystroke) ──
   ozInp.addEventListener('change', function() { if (typeof umami !== 'undefined') umami.track('log-oz', {session: i + 1}); });
   const ozLbl = document.createElement('span'); ozLbl.className = 'field-lbl'; ozLbl.textContent = unitLabel();
   ozField.appendChild(ozInp); ozField.appendChild(ozLbl);
@@ -1103,6 +1220,8 @@ function updateSummary(day) {
       card.querySelector('.card-main').appendChild(b);
     }
   }
+  // Check milestone after updating summary
+  checkMilestone(day);
 }
 
 function updateSession(i, field, val, inp) {
@@ -1372,7 +1491,8 @@ function renderHistory() {
     tr.innerHTML = `<td>${fmtDate(d)}</td><td>${disp}</td><td>${done}/${sessionCount}</td><td class="history-mood">${moodEmojis}</td><td style="color:#6b6a66;font-size:11px">${day.note||''}</td>`;
     tbody.appendChild(tr);
   });
-  if (!hasAny) tbody.innerHTML = `<tr><td colspan="5" class="empty">No data yet — log your first session!</td></tr>`;
+  // Change 3: Empty state copy
+  if (!hasAny) tbody.innerHTML = `<tr><td colspan="5" class="empty">Your supply story starts here 🍼</td></tr>`;
 }
 
 // ── Export / Import ───────────────────────────────────────────────────────────
@@ -1413,7 +1533,12 @@ function importData(e) {
 }
 
 // ── Init ──────────────────────────────────────────────────────────────────────
-loadData().then(() => { syncPrefsUI(); renderLog(); updateHistoryHeader(); });
+loadData().then(() => {
+  syncPrefsUI();
+  renderLog();
+  updateHistoryHeader();
+  initWelcomeCard();
+});
 </script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
 </body>
