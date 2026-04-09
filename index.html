@@ -39,7 +39,7 @@ header { margin-bottom: 16px; display: flex; align-items: flex-start; justify-co
 .header-text h1 span { color: #E8960A; font-style: italic; font-family: 'Playfair Display', Georgia, serif; }
 
 /* Header eyebrow chip + tagline */
-.header-eyebrow { display: inline-flex; align-items: center; gap: 5px; background: rgba(29,158,117,0.1); border-radius: 99px; padding: 2px 8px 2px 5px; margin-top: 10px; margin-bottom: 5px; }
+.header-eyebrow { display: inline-flex; align-items: center; gap: 5px; background: rgba(29,158,117,0.1); border-radius: 99px; padding: 2px 8px 2px 5px; }  
 .header-eyebrow span.chip-text { font-size: 10px; font-weight: 600; color: #0F6E56; letter-spacing: 0.3px; }
 .header-tagline { font-size: 11.5px; color: #6b6a66; margin-top: 6px; }
 
@@ -474,8 +474,11 @@ header { margin-bottom: 16px; display: flex; align-items: flex-start; justify-co
   <header>
     <div class="header-text">
       <h1>Drop<span>wise</span></h1>
-      <div class="header-eyebrow"><span>🤱</span><span class="chip-text">BY A MOM, FOR A MOM</span></div>
-      <p class="header-tagline">Your liquid gold, tracked wisely.</p>
+      <div style="display:flex; align-items:flex-start; gap:6px;">
+      <h1>Drop<span>wise</span></h1>
+      <div class="header-eyebrow" style="margin-top:4px;"><span>🤱</span><span class="chip-text">BY A MOM, FOR A MOM</span></div>
+      </div>
+      <p class="header-tagline" style="margin-top:10px;">Your liquid gold, tracked wisely.</p>
     </div>
     <div class="header-controls">
       <div class="unit-toggle">
