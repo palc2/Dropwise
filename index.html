@@ -14,14 +14,10 @@
 button  { -webkit-appearance: none; appearance: none; color: inherit; background: none; border: none; font-family: inherit; cursor: pointer; }
 input, textarea, select { -webkit-appearance: none; appearance: none; font-family: inherit; }
 
-/* ── Design tokens — light ─────────────────────────────────────────────────*/
+/* ── Design tokens ──────────────────────────────────────────────────────────*/
 :root {
   --r: 10px;
   --rs: 7px;
-  --blue:   #378ADD;
-  --green:  #1D9E75;
-  --amber:  #E8960A;
-  --red:    #EF4444;
 }
 
 /* ── Base ─────────────────────────────────────────────────────────────────── */
@@ -74,7 +70,7 @@ header { margin-bottom: 16px; display: flex; align-items: flex-start; justify-co
   .sessions-ctrl select { color: #f5f5f5; }
 }
 
-/* ── Welcome card (Change 2) ──────────────────────────────────────────────── */
+/* ── Welcome card ────────────────────────────────────────────────────────── */
 .welcome-card { display: flex; align-items: flex-start; gap: 10px; background: rgba(29,158,117,0.07); border: 0.5px solid rgba(29,158,117,0.3); border-radius: var(--r); padding: 12px 14px; margin-bottom: 16px; animation: fadeIn 0.4s ease; }
 .welcome-icon { font-size: 22px; flex-shrink: 0; margin-top: 1px; }
 .welcome-body { flex: 1; }
@@ -246,12 +242,17 @@ header { margin-bottom: 16px; display: flex; align-items: flex-start; justify-co
 /* Extra cards (additions beyond sessionCount) */
 .session-card.extra-card { border-left-color: rgba(0,0,0,0.12); opacity: 0.85; }
 .session-card.extra-card .s-name { color: #9b9a96; }
+/* When an extra card is done, extra-card's opacity: 0.85 would otherwise win the
+   cascade (it appears later in the sheet than .done). Force the same dim as all
+   other done cards so the text/content fades identically. */
+.session-card.done.extra-card { opacity: 0.5; }
 
 @media (prefers-color-scheme: dark) {
   .card-delete-btn { color: #5a5a5e; }
   .session-card.extra-card { border-left-color: rgba(255,255,255,0.1); }
   .session-card.extra-card .s-name { color: #5a5a5e; }
 }
+
 .mini-input { width: 46px; padding: 5px 4px; font-size: 12px; border: 0.5px solid rgba(0,0,0,0.18); border-radius: var(--rs); background: #ffffff; color: #1a1a1a; text-align: center; -moz-appearance: textfield; transition: border-color 0.2s; }
 .mini-input::-webkit-outer-spin-button, .mini-input::-webkit-inner-spin-button { -webkit-appearance: none; }
 .mini-input:focus { outline: none; border-color: #378ADD; }
@@ -408,7 +409,6 @@ header { margin-bottom: 16px; display: flex; align-items: flex-start; justify-co
 .io-btn:hover { background: #f3f2ee; }
 .io-note { font-size: 11px; color: #9b9a96; margin-top: 8px; line-height: 1.6; }
 
-/* Change 5: About blurb */
 .about-blurb { margin-top: 12px; padding-top: 12px; border-top: 0.5px solid rgba(0,0,0,0.08); font-size: 11px; color: #9b9a96; line-height: 1.65; font-style: italic; }
 
 @media (prefers-color-scheme: dark) {
@@ -422,7 +422,7 @@ header { margin-bottom: 16px; display: flex; align-items: flex-start; justify-co
   .about-blurb         { border-top-color: rgba(255,255,255,0.08); color: #5a5a5e; }
 }
 
-/* ── Milestone toast (Change 4) ───────────────────────────────────────────── */
+/* ── Milestone toast ─────────────────────────────────────────────────────── */
 .milestone-toast {
   position: fixed;
   bottom: 28px;
@@ -467,7 +467,6 @@ header { margin-bottom: 16px; display: flex; align-items: flex-start; justify-co
 </head>
 <body>
 
-<!-- Change 4: Milestone toast element -->
 <div class="milestone-toast" id="milestone-toast"></div>
 
 <div class="app">
@@ -492,7 +491,7 @@ header { margin-bottom: 16px; display: flex; align-items: flex-start; justify-co
     </div>
   </header>
 
-  <!-- Change 2: Welcome card (shown/hidden via JS) -->
+  <!-- Welcome card (shown/hidden via JS) -->
   <div class="welcome-card" id="welcome-card" style="display:none">
     <div class="welcome-icon">🤱</div>
     <div class="welcome-body">
@@ -651,7 +650,6 @@ const store = {
 };
 
 // ── Constants ─────────────────────────────────────────────────────────────────
-// Change 7: Extended mood options with 3 new tags
 const MOOD_OPTIONS = [
   { id:'tired',       emoji:'😴', label:'Tired'         },
   { id:'low',         emoji:'💧', label:'Low supply'    },
@@ -664,7 +662,6 @@ const MOOD_OPTIONS = [
   { id:'skintoskin',  emoji:'🧘', label:'Skin-to-skin'  },
 ];
 
-// Change 4: Milestone threshold (oz stored internally as oz)
 const MILESTONE_OZ = 15;
 
 // ── Schedule helpers ──────────────────────────────────────────────────────────
@@ -875,7 +872,7 @@ function slotLabel(schedule, i) {
 function getDayData(key) {
   if (!data[key]) data[key] = {
     sessions: Array(12).fill(null).map(() => ({ oz:'', min:'', done:false, customName:'', sessionNote:'', customTime:'' })),
-    note:'', noteTmrw:'', moods:[], planDismissed:false
+    note:'', noteTmrw:'', moods:[]
   };
   while (data[key].sessions.length < 12) data[key].sessions.push({ oz:'', min:'', done:false, customName:'', sessionNote:'', customTime:'' });
   data[key].sessions.forEach(s => {
@@ -920,7 +917,7 @@ function flashSaved(badge, inp) {
   saveTimers[badge.dataset.idx] = setTimeout(() => badge.classList.remove('visible'), 1600);
 }
 
-// ── Milestone toast (Change 4) ────────────────────────────────────────────────
+// ── Milestone toast ───────────────────────────────────────────────────────────
 function checkMilestone(day) {
   const today = new Date(); today.setHours(0,0,0,0);
   if (currentDate.getTime() !== today.getTime()) return; // only for today
@@ -948,7 +945,7 @@ function showMilestoneToast(msg) {
   setTimeout(() => toast.classList.remove('show'), 4000);
 }
 
-// ── Welcome card (Change 2) ───────────────────────────────────────────────────
+// ── Welcome card ─────────────────────────────────────────────────────────────
 async function initWelcomeCard() {
   try {
     const seen = await store.get('dropwise_welcome_seen');
@@ -1186,14 +1183,33 @@ function buildSessionCard(list, i, ses, day, isExtra, visibleIdx) {
 }
 
 function reorderCards(from, to) {
-  const day   = getDayData(dateKey(currentDate));
-  const cards = [...document.querySelectorAll('.session-card')];
-  const fi = cards.indexOf(from), ti = cards.indexOf(to);
-  if (fi < 0 || ti < 0) return;
-  [day.sessions[fi], day.sessions[ti]] = [day.sessions[ti], day.sessions[fi]];
-  const sched = getSchedule().map(s => ({...s}));
-  [sched[fi], sched[ti]] = [sched[ti], sched[fi]];
-  customSchedule = sched; persist(); renderLog();
+  const day = getDayData(dateKey(currentDate));
+
+  // Use data indices from card IDs (card-0, card-3, etc.) rather than DOM
+  // positions — DOM order and data array order diverge when sessions are deleted.
+  const fi = parseInt(from.id.replace('card-', ''));
+  const ti = parseInt(to.id.replace('card-', ''));
+  if (isNaN(fi) || isNaN(ti) || fi === ti) return;
+
+  // Build ordered list of active (non-deleted) data indices.
+  const active = day.sessions.map((_, i) => i).filter(i => !day.sessions[i].deleted);
+  const fromPos = active.indexOf(fi);
+  if (fromPos < 0 || active.indexOf(ti) < 0) return;
+
+  // Remove dragged card from its current position, then insert it before the
+  // target card — true insert semantics, not a swap.
+  active.splice(fromPos, 1);
+  const insertPos = active.indexOf(ti); // re-find ti after removal
+  active.splice(insertPos, 0, fi);
+
+  // Write back in new order; keep deleted slots at the end (they're invisible).
+  const reordered = active.map(i => day.sessions[i]);
+  const deleted   = day.sessions.filter(s => s.deleted);
+  day.sessions = [...reordered, ...deleted];
+
+  // Do NOT touch customSchedule here — each session already stores its own
+  // customTime, and the schedule is only a template for empty future slots.
+  persist(); renderLog();
 }
 
 function updateSummary(day) {
@@ -1247,10 +1263,11 @@ function toggleDone(i) {
   const btn   = card.querySelector('.dot-btn');
   const isDone = day.sessions[i].done;
   const hasValue = day.sessions[i].oz !== '' && parseFloat(day.sessions[i].oz) > 0;
+  // Preserve extra-card class for Additional sessions (index beyond sessionCount)
+  const isExtra = i >= sessionCount;
   btn.className = 'dot-btn' + (isDone ? ' done' : '');
   btn.classList.remove('pulse'); void btn.offsetWidth; btn.classList.add('pulse');
   setTimeout(() => btn.classList.remove('pulse'), 600);
-  const isExtra = card.classList.contains('extra-card'); // preserve this class
   card.className = 'session-card'
     + (isDone ? ' done' : '')
     + (hasValue && !isDone ? ' has-value' : '')
@@ -1446,11 +1463,11 @@ function renderChart() {
     days.forEach(d => {
       const day = data[dateKey(d)];
       if (!day) { totals.push(0); avgs.push(null); return; }
-      
-      // FIX: include ALL non-deleted sessions, not just first sessionCount
-      const sessions = day.sessions.filter(s => s && !s.deleted);
+      // Use getCardCountForDay so Additional sessions (index >= sessionCount)
+      // are included when the user changed session count after logging data.
+      const cardCount = getCardCountForDay(day);
+      const sessions = day.sessions.slice(0, cardCount).filter(x => x && !x.deleted);
       const logged   = sessions.filter(x => x.oz !== '');
-      
       const totalOz  = logged.reduce((s,x) => s + (parseFloat(x.oz)||0), 0);
       totals.push(parseFloat(conv(totalOz).toFixed(unit==='ml'?0:1)));
       avgs.push(logged.length > 0 ? parseFloat(conv(totalOz/logged.length).toFixed(unit==='ml'?1:2)) : null);
@@ -1469,29 +1486,25 @@ function renderChart() {
   } else {
     const palette  = ['#378ADD','#5B9BD5','#7EB3D0','#3D8BC4','#60A5C8','#2E73A8','#4A90D9','#6BA3C8','#85B7E0','#4A7FC1','#3A6BAF','#5590D4'];
     const schedule = getSchedule();
-    
-    const datasets = schedule.map((ses, i) => ({
-      label: ses.time,
-      data:  days.map(d => { const day = data[dateKey(d)]; return day ? parseFloat(conv(parseFloat(day.sessions[i]?.oz)||0).toFixed(unit==='ml'?0:1)) : 0; }),
-      backgroundColor: palette[i % palette.length] + 'cc', stack:'a', borderRadius:2
-    }));
-
-    // FIX: find max slots across all days so extra sessions appear in chart
-    const maxSlots = Math.max(sessionCount, ...days.map(d => {
-      const day = data[dateKey(d)];
-      return day ? day.sessions.filter(s => s && !s.deleted).length : 0;
-    }));
-    const datasets = Array.from({length: maxSlots}, (_, i) => ({
-      label: `Session ${i+1}`,
-      data:  days.map(d => {
-        const day = data[dateKey(d)];
-        if (!day) return 0;
-        const active = day.sessions.filter(s => s && !s.deleted);
-        return active[i] ? parseFloat(conv(parseFloat(active[i].oz)||0).toFixed(unit==='ml'?0:1)) : 0;
-      }),
-      backgroundColor: palette[i % palette.length] + 'cc', stack:'a', borderRadius:2
-    }));
-    
+    // Find the max number of active slots across all visible days so Additional
+    // sessions (index >= sessionCount) appear as their own stacked bar segment.
+    let maxSlots = sessionCount;
+    days.forEach(d => { const day = data[dateKey(d)]; if (day) maxSlots = Math.max(maxSlots, getCardCountForDay(day)); });
+    const datasets = [];
+    for (let i = 0; i < maxSlots; i++) {
+      const isExtra = i >= sessionCount;
+      const label   = isExtra ? 'Additional' : schedule[i].time;
+      datasets.push({
+        label,
+        data: days.map(d => {
+          const day = data[dateKey(d)]; if (!day) return 0;
+          const s = day.sessions[i]; if (!s || s.deleted) return 0;
+          return parseFloat(conv(parseFloat(s.oz)||0).toFixed(unit==='ml'?0:1));
+        }),
+        backgroundColor: (isExtra ? '#1D9E75' : palette[i % palette.length]) + 'cc',
+        stack: 'a', borderRadius: 2
+      });
+    }
     chartInst = new Chart(ctx, {
       type: 'bar',
       data: { labels, datasets },
